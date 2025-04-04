@@ -1,0 +1,24 @@
+{
+    "name": "from-submodules-to-monorepo",
+    "version": "1.0.0",
+    "description": "Utility to transform a big project with many submodules into a single monorepo",
+    "main": "perform-transformation.js",
+    "directories": {
+        "test": "test",
+        "utils": "utils"
+    },
+    "scripts": {
+        "test": "node test/index",
+        "format": "prettier . --write",
+        "eslint": "eslint"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@eslint/js": "^9.23.0",
+        "eslint": "^9.23.0",
+        "globals": "^16.0.0",
+        "prettier": "3.5.3"
+    }
+}
