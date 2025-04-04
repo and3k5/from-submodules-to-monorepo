@@ -61,7 +61,7 @@ This script is highly experimental and may cause irreversible damage, including 
 node perform-transformation.js <repo-dir> <branch-name>
 ```
 
-You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible .
+You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible damage.
 
 ## What does `perform-transformation.js` do?
 
