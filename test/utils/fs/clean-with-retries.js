@@ -1,4 +1,4 @@
-const { cleanDirSync } = require("../../../utils/fs/clean-dir");
+const { cleanDirSync } = require("./clean-dir");
 
 /**
  *

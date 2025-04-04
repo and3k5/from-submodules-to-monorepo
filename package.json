@@ -7,7 +7,6 @@
         "from-submodules-to-monorepo": "./perform-transformation.js"
     },
     "directories": {
-        "test": "test",
         "utils": "utils"
     },
     "scripts": {

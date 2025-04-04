@@ -1,0 +1,7 @@
+/.vscode
+/test
+/.prettierrc
+/eslint.config.mjs
+/jsconfig.json
+typings
+*.tgz

@@ -13,7 +13,7 @@ const { gitPush } = require("./utils/git/git-push");
 const { gitCommit } = require("./utils/git/git-commit");
 const {
     capitalizeFirstLetter,
-} = require("../utils/string/capitalize-first-letter");
+} = require("./utils/string/capitalize-first-letter");
 const { cleanWithRetries } = require("./utils/fs/clean-with-retries");
 
 const devDir = resolve(__dirname, "dev");
