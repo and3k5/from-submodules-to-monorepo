@@ -109,13 +109,15 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
 
         console.log(`   Pull origin branch into main repo`);
 
+        run("git", ["fetch", `origin_${submodule.path}`, migrationBranchName], {
+            cwd: mainRepoDir,
+        });
         run(
             "git",
             [
-                "pull",
-                `origin_${submodule.path}`,
-                migrationBranchName,
+                "merge",
                 "--allow-unrelated-histories",
+                `origin_${submodule.path}/${migrationBranchName}`,
             ],
             { cwd: mainRepoDir },
         );
