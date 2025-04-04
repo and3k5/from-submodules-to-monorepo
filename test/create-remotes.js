@@ -1,5 +1,5 @@
 #!/bin/node
-const { mkdirSync, rmSync } = require("fs");
+const { mkdirSync, rmSync, existsSync } = require("fs");
 const { resolve } = require("path");
 const { submodules } = require("./submodules");
 const { run } = require("../utils/process/run");
@@ -30,7 +30,11 @@ async function createRemotes() {
 
     console.log("  clean " + resolve(remoteDir));
 
-    cleanWithRetries(remoteDir);
+    if (existsSync(remoteDir)) {
+        cleanWithRetries(remoteDir);
+    } else {
+        mkdirSync(remoteDir);
+    }
 
     const tempDir = resolve(remoteDir, "temp");
     mkdirSync(tempDir);
