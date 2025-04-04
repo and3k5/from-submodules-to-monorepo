@@ -5,11 +5,14 @@ const { performTransformation } = require("../perform-transformation");
 const { createFile } = require("./utils/fs/create-file");
 const { readFileSync } = require("fs");
 const { pullFlag } = require("../utils/args/pull-flag");
+const os = require("os");
 
 (async function () {
     try {
         const mainRepoDir = await createSubModules();
-        const tree = run("tree", ["/f", "/a"], {
+
+        const treeArgs = os.platform() === "linux" ? [] : ["/f", "/a"];
+        const tree = run("tree", treeArgs, {
             encoding: "utf-8",
             cwd: mainRepoDir,
         }).stdout;
@@ -28,7 +31,7 @@ const { pullFlag } = require("../utils/args/pull-flag");
                 "migrate-from-submodules-to-monorepo",
             );
 
-            const tree2 = run("tree", ["/f", "/a"], {
+            const tree2 = run("tree", treeArgs, {
                 encoding: "utf-8",
                 cwd: mainRepoDir,
             }).stdout;
