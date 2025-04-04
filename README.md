@@ -55,6 +55,14 @@ This will create local repositories with random commit histories and then perfor
 ⚠ **Use at your own risk!**  
 This script is highly experimental and may cause irreversible damage, including but not limited to data loss, corruption of repositories, or deletion of your entire project. I will not be held responsible or liable for any damages, errors, or losses caused by using this solution. Always ensure you have proper backups before proceeding.
 
+## Command line
+
+```
+node perform-transformation.js <repo-dir> <branch-name>
+```
+
+You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible .
+
 ## What does `perform-transformation.js` do?
 
 - It checks out a new branch in the main repository.
