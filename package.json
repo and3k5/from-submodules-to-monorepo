@@ -3,6 +3,9 @@
     "version": "1.0.0",
     "description": "Utility to transform a big project with many submodules into a single monorepo",
     "main": "perform-transformation.js",
+    "bin": {
+        "from-submodules-to-monorepo": "./perform-transformation.js"
+    },
     "directories": {
         "test": "test",
         "utils": "utils"

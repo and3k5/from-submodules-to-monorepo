@@ -1,6 +1,6 @@
-#!/bin/node
+#!/usr/bin/env node
 const { mkdirSync, existsSync, renameSync } = require("fs");
-const { resolve, join, relative } = require("path");
+const { resolve, join, relative, parse } = require("path");
 const { run } = require("./utils/process/run");
 const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
@@ -124,12 +124,19 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
     console.log("Transformation finished!");
 }
 
+function getCommandLine() {
+    const nodeName = process.argv0;
+    const relPath = relative(cwd(), process.argv[1]);
+    if (parse(relPath).dir.replace(/\\/g, "/").split("/").length > 2) {
+        return "npx from-submodules-to-monorepo";
+    }
+    return `${nodeName} ${relPath}`;
+}
+
 function showUsage() {
     console.log("Usage:");
-    const nodeName = process.argv0;
-    const scriptName = relative(cwd(), process.argv[1]);
     console.log(
-        `${nodeName} ${scriptName} <repo-dir> <branch-name> --acknowledge-risks-and-continue`,
+        `${getCommandLine()} <repo-dir> <branch-name> --acknowledge-risks-and-continue`,
     );
 }
 
