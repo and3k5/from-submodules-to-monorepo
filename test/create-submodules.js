@@ -92,6 +92,11 @@ async function createSubModules() {
         encoding: "utf-8",
     });
 
+    run("git", ["config", "user.name", "example user"], { cwd: mySystemDir });
+    run("git", ["config", "user.email", "user@example.com"], {
+        cwd: mySystemDir,
+    });
+
     console.log("  add submodules to my-system");
     for (const submodule of submodules) {
         console.log("   - " + submodule.name);
@@ -107,6 +112,12 @@ async function createSubModules() {
             return (async function () {
                 console.log("   - " + submodule.name);
                 const actualDir = resolve(mySystemDir, submodule.name);
+                run("git", ["config", "user.name", "example user"], {
+                    cwd: actualDir,
+                });
+                run("git", ["config", "user.email", "user@example.com"], {
+                    cwd: actualDir,
+                });
                 makeRandomHistory(actualDir, submodule);
                 gitPush("origin", "master", actualDir, true);
             })();

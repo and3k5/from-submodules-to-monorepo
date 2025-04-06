@@ -49,6 +49,11 @@ async function createRemotes() {
         makeRemote(module.name + ".git");
         const actualDir = cloneRepo(module.name, tempDir);
 
+        run("git", ["config", "user.name", "example user"], { cwd: actualDir });
+        run("git", ["config", "user.email", "user@example.com"], {
+            cwd: actualDir,
+        });
+
         console.log("     dir: " + actualDir);
 
         createFile(
