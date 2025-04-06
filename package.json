@@ -12,7 +12,8 @@
     "scripts": {
         "test": "node test/index",
         "format": "prettier . --write",
-        "eslint": "eslint"
+        "eslint": "eslint",
+        "postversion": "node read-version.js --run-command"
     },
     "keywords": [],
     "author": "",
