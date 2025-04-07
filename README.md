@@ -58,7 +58,7 @@ This script is highly experimental and may cause irreversible damage, including 
 ## Command line
 
 ```
-node perform-transformation.js <repo-dir> <branch-name>
+npx from-submodules-to-monorepo <repo-dir> <branch-name>
 ```
 
 You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible damage.
