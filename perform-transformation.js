@@ -89,18 +89,10 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
         run("git", ["commit", "-m", `Remove submodule: ${submodule.path}`], {
             cwd: mainRepoDir,
         });
-    }
 
-    console.log("Removed all submodules!");
-    console.log("Pulling submodules into main repo");
+        console.log("   Pulling submodule into main repo");
 
-    for (const submodule of submodules) {
         const remoteUrl = submodule.url;
-
-        console.log(` - Submodule: ${submodule.path}`);
-        console.log(
-            `   Position: ${submodules.indexOf(submodule)}/${submodules.length - 1}`,
-        );
 
         console.log(`   Adding remote: ${remoteUrl}`);
 
