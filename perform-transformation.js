@@ -6,6 +6,7 @@ const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
 const { pullFlag } = require("./utils/args/pull-flag");
 const { pullValue } = require("./utils/args/pull-value");
+const { sameDirName } = require("./utils/path/same-dir-name");
 
 async function performTransformation(mainRepoDir, migrationBranchName) {
     if (typeof mainRepoDir != "string")
@@ -55,7 +56,7 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
             .filter((e) => e != "");
 
         for (const entry of entries) {
-            if (entry === submodule.path) continue;
+            if (sameDirName(entry, submodule.path)) continue;
             run("git", ["mv", `${fullPath}/${entry}`, targetPath], {
                 cwd: fullPath,
             });
