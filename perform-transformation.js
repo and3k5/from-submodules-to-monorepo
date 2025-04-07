@@ -95,16 +95,51 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
         console.log("   Pulling submodule into main repo");
 
         const remoteUrl = submodule.url;
+        const remoteName = `origin_${submodule.path}`;
 
-        console.log(`   Adding remote: ${remoteUrl}`);
+        let remoteExists = false;
+        let createNewRemote = true;
+        try {
+            const existingRemoteUrl = run(
+                "git",
+                ["remote", "get-url", "--all", remoteName],
+                {
+                    cwd: mainRepoDir,
+                    encoding: "utf-8",
+                },
+            ).stdout.trim();
+            if (existingRemoteUrl != null && existingRemoteUrl != "") {
+                remoteExists = true;
+            }
+            if (remoteExists) {
+                if (existingRemoteUrl === remoteUrl) {
+                    createNewRemote = false;
+                    console.log(`   Remote ${remoteName} already exists!`);
+                } else {
+                    console.warn(
+                        `   Remote ${remoteName} already exists but url is ${existingRemoteUrl}`,
+                    );
+                }
+            }
+        } catch {
+            remoteExists = false;
+        }
 
-        run("git", ["remote", "add", `origin_${submodule.path}`, remoteUrl], {
-            cwd: mainRepoDir,
-        });
+        if (!remoteExists || createNewRemote) {
+            if (remoteExists) {
+                throw new Error("Origin exists but has different url");
+            }
+
+            console.log(`   Adding remote: ${remoteUrl}`);
+
+            run("git", ["remote", "add", remoteName, remoteUrl], {
+                cwd: mainRepoDir,
+            });
+        }
 
         console.log(`   Pull origin branch into main repo`);
 
-        run("git", ["fetch", `origin_${submodule.path}`, migrationBranchName], {
+        run("git", ["fetch", remoteName, migrationBranchName], {
             cwd: mainRepoDir,
         });
         run(
@@ -115,7 +150,7 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
                 "-s",
                 "recursive",
                 "-Xno-renames",
-                `origin_${submodule.path}/${migrationBranchName}`,
+                `${remoteName}/${migrationBranchName}`,
             ],
             { cwd: mainRepoDir },
         );
