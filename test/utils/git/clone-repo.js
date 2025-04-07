@@ -1,10 +1,10 @@
 const { resolve } = require("path");
 const { run } = require("../../../utils/process/run");
-const { gitRemoteBase } = require("../../globals");
+const { remotePath } = require("./remote-path");
 
 function cloneRepo(reponame, dir) {
-    const remotePath = gitRemoteBase + "/" + reponame + ".git";
-    run("git", ["clone", remotePath], {
+    const remoteUrl = remotePath(reponame);
+    run("git", ["clone", remoteUrl], {
         cwd: dir,
         encoding: "utf-8",
     });

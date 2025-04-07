@@ -15,6 +15,7 @@ const {
     capitalizeFirstLetter,
 } = require("./utils/string/capitalize-first-letter");
 const { cleanWithRetries } = require("./utils/fs/clean-with-retries");
+const { remotePath } = require("./utils/git/remote-path");
 
 const devDir = resolve(__dirname, "dev");
 const mySystemDir = resolve(devDir, "my-system");
@@ -48,33 +49,6 @@ function makeRandomHistory(dir, submodule, depth = 2, currentDepth = 0) {
             makeRandomHistory(subDir, submodule, depth - 1, currentDepth + 1);
         }
     }
-
-    if (currentDepth === 0) {
-        if (
-            "additionalFiles" in submodule &&
-            submodule.additionalFiles != null
-        ) {
-            for (const fileName of submodule.additionalFiles) {
-                createFile(
-                    dir,
-                    fileName,
-                    words(150 + Math.round(Math.random() * 100)),
-                );
-            }
-        }
-        if ("additionalDirs" in submodule && submodule.additionalDirs != null) {
-            for (const dirName of submodule.additionalDirs) {
-                const subDir = resolve(dir, dirName);
-                mkdirSync(subDir);
-                makeRandomHistory(
-                    subDir,
-                    submodule,
-                    depth - 1,
-                    currentDepth + 1,
-                );
-            }
-        }
-    }
 }
 
 async function createSubModules() {
@@ -99,6 +73,7 @@ async function createSubModules() {
 
     console.log("  add submodules to my-system");
     for (const submodule of submodules) {
+        if (submodule.skipAddAsSubmodule === true) continue;
         console.log("   - " + submodule.name);
         addSubmodule(submodule.name, mySystemDir);
 
@@ -108,24 +83,82 @@ async function createSubModules() {
 
     console.log("  generate some random file history");
     await Promise.all(
-        submodules.map((submodule) => {
-            return (async function () {
-                console.log("   - " + submodule.name);
-                const actualDir = resolve(mySystemDir, submodule.name);
-                run("git", ["config", "user.name", "example user"], {
-                    cwd: actualDir,
-                });
-                run("git", ["config", "user.email", "user@example.com"], {
-                    cwd: actualDir,
-                });
-                makeRandomHistory(actualDir, submodule);
-                gitPush("origin", "master", actualDir, true);
-            })();
-        }),
+        submodules
+            .filter((x) => x.skipAddAsSubmodule !== true)
+            .map((submodule) => {
+                return (async function () {
+                    console.log("   - " + submodule.name);
+                    const actualDir = resolve(mySystemDir, submodule.name);
+                    run("git", ["config", "user.name", "example user"], {
+                        cwd: actualDir,
+                    });
+                    run("git", ["config", "user.email", "user@example.com"], {
+                        cwd: actualDir,
+                    });
+                    makeRandomHistory(actualDir, submodule);
+
+                    if (
+                        "additionalFiles" in submodule &&
+                        submodule.additionalFiles != null
+                    ) {
+                        for (const fileName of submodule.additionalFiles) {
+                            createFile(
+                                actualDir,
+                                fileName,
+                                words(150 + Math.round(Math.random() * 100)),
+                            );
+                        }
+                    }
+                    if (
+                        "additionalDirs" in submodule &&
+                        submodule.additionalDirs != null
+                    ) {
+                        for (const dirName of submodule.additionalDirs) {
+                            const subDir = resolve(actualDir, dirName);
+                            mkdirSync(subDir);
+                            makeRandomHistory(subDir, submodule);
+                        }
+                    }
+                    if ("pullFrom" in submodule && submodule.pullFrom != null) {
+                        for (const pullFrom of submodule.pullFrom) {
+                            const pullFromRemoteUrl = remotePath(pullFrom);
+                            run(
+                                "git",
+                                [
+                                    "remote",
+                                    "add",
+                                    `origin_${pullFrom}`,
+                                    pullFromRemoteUrl,
+                                ],
+                                { cwd: actualDir },
+                            );
+                            run(
+                                "git",
+                                ["fetch", `origin_${pullFrom}`, "master"],
+                                {
+                                    cwd: actualDir,
+                                },
+                            );
+                            run(
+                                "git",
+                                [
+                                    "merge",
+                                    "--allow-unrelated-histories",
+                                    `origin_${pullFrom}/master`,
+                                ],
+                                { cwd: actualDir },
+                            );
+                        }
+                    }
+
+                    gitPush("origin", "master", actualDir, true);
+                })();
+            }),
     );
 
     console.log("  add submodule change to my-system");
     for (const submodule of submodules) {
+        if (submodule.skipAddAsSubmodule === true) continue;
         console.log("   - " + submodule.name);
         gitAdd(submodule.name, mySystemDir);
     }

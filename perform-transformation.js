@@ -112,6 +112,9 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
             [
                 "merge",
                 "--allow-unrelated-histories",
+                "-s",
+                "recursive",
+                "-Xno-renames",
                 `origin_${submodule.path}/${migrationBranchName}`,
             ],
             { cwd: mainRepoDir },

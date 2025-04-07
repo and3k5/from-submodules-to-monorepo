@@ -41,8 +41,8 @@ async function createRemotes() {
 
     console.log("  make local remotes directories");
     for (const module of submodules
-        .map((x) => ({ submodule: true, name: x.name }))
-        .concat([{ submodule: false, name: "my-system" }])) {
+        .map((x) => ({ submodule: true, name: x.name, src: x }))
+        .concat([{ submodule: false, name: "my-system", src: null }])) {
         console.log("   - Module: " + module.name);
 
         console.log("     tempDir: " + tempDir);
@@ -56,13 +56,16 @@ async function createRemotes() {
 
         console.log("     dir: " + actualDir);
 
+        let readmeName = "README.md";
+        if (module.src != null && module.src.customReadMeName != null) {
+            readmeName = module.src.customReadMeName;
+        }
         createFile(
             actualDir,
-            "README.md",
+            readmeName,
             `This is the ${module.submodule ? "submodule" : "main"} repo for ${module.name}.`,
         );
-
-        gitAdd("README.md", actualDir);
+        gitAdd(readmeName, actualDir);
         gitCommit("Added readme file", actualDir);
         gitPush("origin", "master", actualDir, true);
     }
