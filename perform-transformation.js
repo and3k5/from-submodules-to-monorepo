@@ -44,7 +44,9 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
         );
         const targetPathExists = existsSync(targetPath);
         const tempNameForExistingPath = `${submodule.path}_TEMP_DUP`;
-        renameSync(targetPath, join(fullPath, tempNameForExistingPath));
+        if (targetPathExists) {
+            renameSync(targetPath, join(fullPath, tempNameForExistingPath));
+        }
 
         mkdirSync(targetPath, { recursive: true });
 
