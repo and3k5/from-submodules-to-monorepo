@@ -20,6 +20,7 @@ const { whileIndexLock } = require("./utils/git/while-index-lock");
 const {
     ensureSameCaseForPath,
 } = require("./utils/path/ensure-same-case-for-path");
+const { checkoutBranches } = require("./transformation/checkout-branches");
 
 /**
  *
@@ -27,12 +28,14 @@ const {
  * @param {object} options
  * @param {string} options.migrationBranchName Branch name to create for the migration
  * @param {string?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
+ * @param {string?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
  */
 async function performTransformation(
     mainRepoDir,
     {
         migrationBranchName,
         resumeFromExistingBranch,
+        resetWithMasterOrMainBranches,
     },
 ) {
     if (typeof mainRepoDir != "string")
@@ -45,6 +48,20 @@ async function performTransformation(
 
     console.log("Going to transform directory:");
     console.log(`   ${mainRepoDir}`);
+    if (resetWithMasterOrMainBranches) {
+        console.log("Resetting repos first");
+        const lines = await checkoutBranches(
+            mainRepoDir,
+            ["main", "master"],
+            {
+                noSubmoduleUpdate: false,
+            },
+            console,
+        );
+        for (const line of lines) {
+            console.log(line);
+        }
+    }
     console.log(
         (resumeFromExistingBranch ? "Resuming from" : "Creating new") +
             " migration branch:",
@@ -167,6 +184,7 @@ if (module.id == ".") {
         argsLeftOver,
         "--resume-from-existing-branch",
     );
+    const resetWithMasterOrMainBranches = pullFlag(argsLeftOver, "--reset-with-master-or-main-branches");
     const mainRepoDir = pullValue(argsLeftOver);
 
     if (mainRepoDir == null) {
@@ -204,6 +222,7 @@ if (module.id == ".") {
     performTransformation(mainRepoDir, {
         migrationBranchName,
         resumeFromExistingBranch,
+        resetWithMasterOrMainBranches,
     });
 } else {
     module.exports.performTransformation = performTransformation;
