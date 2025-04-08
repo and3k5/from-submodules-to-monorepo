@@ -26,10 +26,9 @@ const os = require("os");
         createFile(resolve(mainRepoDir, ".."), "tree-before.txt", tree);
 
         if (!skipTransformation) {
-            await performTransformation(
-                mainRepoDir,
-                "migrate-from-submodules-to-monorepo",
-            );
+            await performTransformation(mainRepoDir, {
+                migrationBranchName: "migrate-from-submodules-to-monorepo",
+            });
 
             const tree2 = run("tree", treeArgs, {
                 encoding: "utf-8",

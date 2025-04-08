@@ -1,5 +1,5 @@
 #!/bin/node
-const { mkdirSync } = require("fs");
+const { mkdirSync, writeFileSync } = require("fs");
 const { resolve } = require("path");
 const { createRemotes } = require("./create-remotes");
 const { submodules } = require("./submodules");
@@ -82,12 +82,16 @@ async function createSubModules() {
     }
 
     console.log("  generate some random file history");
-    await Promise.all(
+    const outputs = await Promise.all(
         submodules
             .filter((x) => x.skipAddAsSubmodule !== true)
             .map((submodule) => {
                 return (async function () {
-                    console.log("   - " + submodule.name);
+                    /**
+                     * @type {string[]}
+                     */
+                    const logs = [];
+                    logs.push("  - " + submodule.name);
                     const actualDir = resolve(mySystemDir, submodule.name);
                     run("git", ["config", "user.name", "example user"], {
                         cwd: actualDir,
@@ -95,6 +99,7 @@ async function createSubModules() {
                     run("git", ["config", "user.email", "user@example.com"], {
                         cwd: actualDir,
                     });
+                    logs.push("      Create random file history");
                     makeRandomHistory(actualDir, submodule);
 
                     if (
@@ -102,6 +107,7 @@ async function createSubModules() {
                         submodule.additionalFiles != null
                     ) {
                         for (const fileName of submodule.additionalFiles) {
+                            logs.push("      Add extra file: " + fileName);
                             createFile(
                                 actualDir,
                                 fileName,
@@ -114,6 +120,7 @@ async function createSubModules() {
                         submodule.additionalDirs != null
                     ) {
                         for (const dirName of submodule.additionalDirs) {
+                            logs.push("      Add extra dir: " + dirName);
                             const subDir = resolve(actualDir, dirName);
                             mkdirSync(subDir);
                             makeRandomHistory(subDir, submodule);
@@ -121,6 +128,7 @@ async function createSubModules() {
                     }
                     if ("pullFrom" in submodule && submodule.pullFrom != null) {
                         for (const pullFrom of submodule.pullFrom) {
+                            logs.push("      Pull from module: " + pullFrom);
                             const pullFromRemoteUrl = remotePath(pullFrom);
                             run(
                                 "git",
@@ -151,10 +159,39 @@ async function createSubModules() {
                         }
                     }
 
+                    if (
+                        "modifiers" in submodule &&
+                        submodule.modifiers != null
+                    ) {
+                        for (const modifier of submodule.modifiers) {
+                            logs.push("      Modifying: " + modifier.file);
+                            writeFileSync(
+                                resolve(actualDir, modifier.file),
+                                modifier.content,
+                                { encoding: "utf-8" },
+                            );
+                            gitAdd(modifier.file, actualDir);
+                            gitCommit("Modified: " + modifier.file, actualDir);
+                        }
+                    }
+
+                    if ("deletes" in submodule && submodule.deletes != null) {
+                        for (const deleteFile of submodule.deletes) {
+                            logs.push("      Delete " + deleteFile);
+                            run("git", ["rm", deleteFile], { cwd: actualDir });
+                            gitCommit("Deleted: " + deleteFile, actualDir);
+                        }
+                    }
+
+                    logs.push("      Push to origin");
                     gitPush("origin", "master", actualDir, true);
+
+                    return logs;
                 })();
             }),
     );
+
+    console.log(outputs.map((x) => x.join("\n")).join("\n"));
 
     console.log("  add submodule change to my-system");
     for (const submodule of submodules) {

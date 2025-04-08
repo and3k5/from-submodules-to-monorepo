@@ -7,8 +7,22 @@ const { cwd } = require("process");
 const { pullFlag } = require("./utils/args/pull-flag");
 const { pullValue } = require("./utils/args/pull-value");
 const { sameDirName } = require("./utils/path/same-dir-name");
+const {
+    autoResolveConflicts,
+} = require("./transformation/auto-resolve-conflicts");
+const { runExec } = require("./utils/process/run-exec");
 
-async function performTransformation(mainRepoDir, migrationBranchName) {
+/**
+ *
+ * @param {string} mainRepoDir
+ * @param {object} options
+ * @param {string} options.migrationBranchName Branch name to create for the migration
+ * @param {string?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
+ */
+async function performTransformation(
+    mainRepoDir,
+    { migrationBranchName, resumeFromExistingBranch },
+) {
     if (typeof mainRepoDir != "string")
         throw new Error("A repo directory is required");
     if (mainRepoDir == "") throw new Error("Must have valid path");
@@ -19,10 +33,21 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
 
     console.log("Going to transform directory:");
     console.log(`   ${mainRepoDir}`);
-    console.log("Migration branch:");
+    console.log(
+        (resumeFromExistingBranch ? "Resuming from" : "Creating new") +
+            " migration branch:",
+    );
     console.log(`   ${migrationBranchName}`);
 
-    run("git", ["checkout", "-b", migrationBranchName], { cwd: mainRepoDir });
+    run(
+        "git",
+        [
+            "checkout",
+            ...(resumeFromExistingBranch ? [] : ["-b"]),
+            migrationBranchName,
+        ],
+        { cwd: mainRepoDir },
+    );
 
     const submodules = readGitmodules(join(mainRepoDir, ".gitmodules"));
 
@@ -73,24 +98,35 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
 
         console.log("   Adding moved files to commit");
 
-        run("git", ["add", "."], { cwd: fullPath });
-        run("git", ["commit", "-m", "Moving submodule files"], {
+        runExec("git", ["add", "."], { cwd: fullPath, stdio: "ignore" });
+        runExec("git", ["commit", "-m", "Moving submodule files"], {
             cwd: fullPath,
+            stdio: "ignore",
         });
 
         console.log("   Pushing to origin");
 
-        run("git", ["push", "origin", migrationBranchName], { cwd: fullPath });
+        runExec("git", ["push", "origin", migrationBranchName], {
+            cwd: fullPath,
+            stdio: "ignore",
+        });
 
         console.log("   Removing submodule from main repo");
 
-        run("git", ["rm", "-f", submodule.path], { cwd: mainRepoDir });
+        runExec("git", ["rm", "-f", submodule.path], {
+            cwd: mainRepoDir,
+            stdio: "ignore",
+        });
 
         console.log("   Committing submodule removal");
 
-        run("git", ["commit", "-m", `Remove submodule: ${submodule.path}`], {
-            cwd: mainRepoDir,
-        });
+        runExec(
+            "git",
+            ["commit", "-m", `Remove submodule: ${submodule.path}`],
+            {
+                cwd: mainRepoDir,
+            },
+        );
 
         console.log("   Pulling submodule into main repo");
 
@@ -142,18 +178,27 @@ async function performTransformation(mainRepoDir, migrationBranchName) {
         run("git", ["fetch", remoteName, migrationBranchName], {
             cwd: mainRepoDir,
         });
-        run(
-            "git",
-            [
-                "merge",
-                "--allow-unrelated-histories",
-                "-s",
-                "recursive",
-                "-Xno-renames",
-                `${remoteName}/${migrationBranchName}`,
-            ],
-            { cwd: mainRepoDir },
-        );
+        try {
+            run(
+                "git",
+                [
+                    "merge",
+                    "--allow-unrelated-histories",
+                    "-s",
+                    "recursive",
+                    "-Xno-renames",
+                    `${remoteName}/${migrationBranchName}`,
+                ],
+                { cwd: mainRepoDir },
+            );
+        } catch (error) {
+            if (
+                error.status !== 1 ||
+                !(await autoResolveConflicts(mainRepoDir, false))
+            ) {
+                throw error;
+            }
+        }
     }
 
     console.log("Transformation finished!");
@@ -180,6 +225,10 @@ if (module.id == ".") {
     const acknowledged = pullFlag(
         argsLeftOver,
         "--acknowledge-risks-and-continue",
+    );
+    const resumeFromExistingBranch = pullFlag(
+        argsLeftOver,
+        "--resume-from-existing-branch",
     );
     const mainRepoDir = pullValue(argsLeftOver);
 
@@ -215,7 +264,10 @@ if (module.id == ".") {
         throw new Error("A repo directory is required");
     if (typeof migrationBranchName != "string")
         throw new Error("Migration branch name is required");
-    performTransformation(mainRepoDir, migrationBranchName);
+    performTransformation(mainRepoDir, {
+        migrationBranchName,
+        resumeFromExistingBranch,
+    });
 } else {
     module.exports.performTransformation = performTransformation;
 }
