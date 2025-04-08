@@ -1,16 +1,21 @@
 #!/usr/bin/env node
-const { mkdirSync, existsSync, renameSync } = require("fs");
+const { existsSync } = require("fs");
 const { resolve, join, relative, parse } = require("path");
 const { run } = require("./utils/process/run");
 const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
 const { pullFlag } = require("./utils/args/pull-flag");
 const { pullValue } = require("./utils/args/pull-value");
-const { sameDirName } = require("./utils/path/same-dir-name");
+const { introduceModule } = require("./operations/submodule/01-intro");
+const { checkoutModule } = require("./operations/submodule/02-checkout");
+const { moveFiles } = require("./operations/submodule/03-move-files");
+const { pushToOrigin } = require("./operations/submodule/04-push-to-origin");
 const {
-    autoResolveConflicts,
-} = require("./transformation/auto-resolve-conflicts");
-const { runExec } = require("./utils/process/run-exec");
+    removeSubmodule,
+} = require("./operations/main-repo/01-remove-submodule");
+const {
+    pullSubmoduleToMainRepo,
+} = require("./operations/main-repo/02-pull-submodule-to-main-repo");
 
 /**
  *
@@ -55,150 +60,12 @@ async function performTransformation(
 
     for (const submodule of submodules) {
         const fullPath = resolve(mainRepoDir, submodule.path);
-        const targetPath = join(fullPath, submodule.path);
-
-        console.log(` - Submodule: ${submodule.path}`);
-        console.log(
-            `   Position: ${submodules.indexOf(submodule)}/${submodules.length - 1}`,
-        );
-        run("git", ["checkout", "-b", migrationBranchName], { cwd: fullPath });
-        console.log(`   Created branch: ${migrationBranchName}`);
-
-        console.log(
-            `   Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
-        );
-        const targetPathExists = existsSync(targetPath);
-        const tempNameForExistingPath = `${submodule.path}_TEMP_DUP`;
-        if (targetPathExists) {
-            renameSync(targetPath, join(fullPath, tempNameForExistingPath));
-        }
-
-        mkdirSync(targetPath, { recursive: true });
-
-        const entries = run("git", ["ls-tree", "--name-only", "HEAD"], {
-            encoding: "utf-8",
-            cwd: fullPath,
-        })
-            .stdout.split("\n")
-            .filter((e) => e != "");
-
-        for (const entry of entries) {
-            if (sameDirName(entry, submodule.path)) continue;
-            run("git", ["mv", `${fullPath}/${entry}`, targetPath], {
-                cwd: fullPath,
-            });
-        }
-
-        if (targetPathExists) {
-            renameSync(
-                join(fullPath, tempNameForExistingPath),
-                join(targetPath, submodule.path),
-            );
-        }
-
-        console.log("   Adding moved files to commit");
-
-        runExec("git", ["add", "."], { cwd: fullPath, stdio: "ignore" });
-        runExec("git", ["commit", "-m", "Moving submodule files"], {
-            cwd: fullPath,
-            stdio: "ignore",
-        });
-
-        console.log("   Pushing to origin");
-
-        runExec("git", ["push", "origin", migrationBranchName], {
-            cwd: fullPath,
-            stdio: "ignore",
-        });
-
-        console.log("   Removing submodule from main repo");
-
-        runExec("git", ["rm", "-f", submodule.path], {
-            cwd: mainRepoDir,
-            stdio: "ignore",
-        });
-
-        console.log("   Committing submodule removal");
-
-        runExec(
-            "git",
-            ["commit", "-m", `Remove submodule: ${submodule.path}`],
-            {
-                cwd: mainRepoDir,
-            },
-        );
-
-        console.log("   Pulling submodule into main repo");
-
-        const remoteUrl = submodule.url;
-        const remoteName = `origin_${submodule.path}`;
-
-        let remoteExists = false;
-        let createNewRemote = true;
-        try {
-            const existingRemoteUrl = run(
-                "git",
-                ["remote", "get-url", "--all", remoteName],
-                {
-                    cwd: mainRepoDir,
-                    encoding: "utf-8",
-                },
-            ).stdout.trim();
-            if (existingRemoteUrl != null && existingRemoteUrl != "") {
-                remoteExists = true;
-            }
-            if (remoteExists) {
-                if (existingRemoteUrl === remoteUrl) {
-                    createNewRemote = false;
-                    console.log(`   Remote ${remoteName} already exists!`);
-                } else {
-                    console.warn(
-                        `   Remote ${remoteName} already exists but url is ${existingRemoteUrl}`,
-                    );
-                }
-            }
-        } catch {
-            remoteExists = false;
-        }
-
-        if (!remoteExists || createNewRemote) {
-            if (remoteExists) {
-                throw new Error("Origin exists but has different url");
-            }
-
-            console.log(`   Adding remote: ${remoteUrl}`);
-
-            run("git", ["remote", "add", remoteName, remoteUrl], {
-                cwd: mainRepoDir,
-            });
-        }
-
-        console.log(`   Pull origin branch into main repo`);
-
-        run("git", ["fetch", remoteName, migrationBranchName], {
-            cwd: mainRepoDir,
-        });
-        try {
-            run(
-                "git",
-                [
-                    "merge",
-                    "--allow-unrelated-histories",
-                    "-s",
-                    "recursive",
-                    "-Xno-renames",
-                    `${remoteName}/${migrationBranchName}`,
-                ],
-                { cwd: mainRepoDir },
-            );
-        } catch (error) {
-            if (
-                error.status !== 1 ||
-                !(await autoResolveConflicts(mainRepoDir, false))
-            ) {
-                throw error;
-            }
-        }
+        introduceModule(submodule, submodules);
+        checkoutModule(fullPath, migrationBranchName);
+        moveFiles(mainRepoDir, fullPath, submodule);
+        pushToOrigin(fullPath, migrationBranchName);
+        removeSubmodule(mainRepoDir, submodule);
+        pullSubmoduleToMainRepo(mainRepoDir, submodule, migrationBranchName);
     }
 
     console.log("Transformation finished!");
