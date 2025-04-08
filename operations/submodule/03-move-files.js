@@ -6,6 +6,7 @@ const { runExec } = require("../../utils/process/run-exec");
 const {
     ensureSameCaseForPath,
 } = require("../../utils/path/ensure-same-case-for-path");
+const { platform } = require("node:os");
 
 /**
  *
@@ -37,6 +38,15 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
     for (const entry of entries) {
         if (sameDirName(entry, submodule.path)) continue;
         const entryPath = `${fullPath}/${entry}`;
+        if (
+            platform() == "win32" &&
+            !existsSync(entryPath) &&
+            entries.some(
+                (x) => x !== entry && x.toUpperCase() == entry.toUpperCase(),
+            )
+        ) {
+            continue;
+        }
         run("git", ["mv", entryPath, targetPath], {
             cwd: fullPath,
         });
