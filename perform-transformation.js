@@ -6,9 +6,6 @@ const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
 const { pullFlag } = require("./utils/args/pull-flag");
 const { pullValue } = require("./utils/args/pull-value");
-const { introduceModule } = require("./operations/submodule/01-intro");
-const { checkoutModule } = require("./operations/submodule/02-checkout");
-const { moveFiles } = require("./operations/submodule/03-move-files");
 const { pushToOrigin } = require("./operations/submodule/04-push-to-origin");
 const {
     removeSubmodule,
@@ -16,6 +13,10 @@ const {
 const {
     pullSubmoduleToMainRepo,
 } = require("./operations/main-repo/02-pull-submodule-to-main-repo");
+const {
+    applyTransformationForSubmodule,
+} = require("./operations/submodule/worker-thread-1");
+const { whileIndexLock } = require("./utils/git/while-index-lock");
 
 /**
  *
@@ -26,7 +27,10 @@ const {
  */
 async function performTransformation(
     mainRepoDir,
-    { migrationBranchName, resumeFromExistingBranch },
+    {
+        migrationBranchName,
+        resumeFromExistingBranch,
+    },
 ) {
     if (typeof mainRepoDir != "string")
         throw new Error("A repo directory is required");
@@ -58,14 +62,73 @@ async function performTransformation(
 
     console.log("Performing transformation:");
 
+    /**
+     * @type {Array<Promise<{submodule: import("./utils/git/read-gitmodules").Submodule, logOutput: string[], error: any, success: boolean}>>}
+     */
+    const workers = [];
+
+    const totalWorkers = submodules.length;
+    let workersLeft = totalWorkers;
+
     for (const submodule of submodules) {
+        console.log("Queued " + submodule.path);
         const fullPath = resolve(mainRepoDir, submodule.path);
-        introduceModule(submodule, submodules);
-        checkoutModule(fullPath, migrationBranchName);
-        moveFiles(mainRepoDir, fullPath, submodule);
-        pushToOrigin(fullPath, migrationBranchName);
-        removeSubmodule(mainRepoDir, submodule);
-        pullSubmoduleToMainRepo(mainRepoDir, submodule, migrationBranchName);
+        workers.push(
+            applyTransformationForSubmodule(
+                mainRepoDir,
+                migrationBranchName,
+                fullPath,
+                submodule,
+                submodules,
+            )
+                .then((logOutput) => ({
+                    submodule,
+                    logOutput,
+                    success: true,
+                    error: null,
+                }))
+                .catch((err) => {
+                    return {
+                        submodule,
+                        logOutput: [],
+                        success: false,
+                        error: err,
+                    };
+                })
+                .finally(() => {
+                    workersLeft--;
+                    console.log(
+                        `Workers left: ${workersLeft} / ${totalWorkers}`,
+                    );
+                }),
+        );
+    }
+
+    const workerResults = await Promise.all(workers);
+
+    if (workerResults.some((x) => x.success === false)) {
+        for (const data of workerResults.filter((x) => x.success == false)) {
+            console.error("Error in submodule " + data.submodule.path);
+            console.error(data.error);
+        }
+        throw new Error("Some workers failed, stopping the process");
+    }
+
+    for (const data of workerResults) {
+        const { submodule, logOutput } = data;
+        const fullPath = resolve(mainRepoDir, submodule.path);
+        for (const line of logOutput) {
+            console.log(line);
+        }
+        pushToOrigin(fullPath, migrationBranchName, console);
+        await whileIndexLock(fullPath);
+        await removeSubmodule(mainRepoDir, submodule, console);
+        await pullSubmoduleToMainRepo(
+            mainRepoDir,
+            submodule,
+            migrationBranchName,
+            console,
+        );
     }
 
     console.log("Transformation finished!");

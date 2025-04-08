@@ -1,5 +1,3 @@
-// git checkout main && git restore --staged . && git submodule update
-
 const { cwd } = require("process");
 const { pullFlag } = require("../utils/args/pull-flag");
 const { pullValue } = require("../utils/args/pull-value");
@@ -8,15 +6,21 @@ const { readGitmodules } = require("../utils/git/read-gitmodules");
 const { runExec } = require("../utils/process/run-exec");
 const { resolve, relative, join } = require("path");
 const { existsSync } = require("fs");
+const {
+    isMainThread,
+    workerData,
+    parentPort,
+    Worker,
+} = require("worker_threads");
+const { createConsoleWrapper } = require("../utils/output/console-wrapper");
 
 /**
  *
  * @param {string} path
  * @param {string | string[]} branchNames
- * @param {object} options
- * @param {boolean} options.noSubmoduleUpdate
+ * @param {import("../utils/output/console-wrapper").ConsoleBase} console
  */
-function checkoutBranches(path, branchNames, { noSubmoduleUpdate }) {
+function checkoutBranch(path, branchNames, console) {
     const matchingBranchName = getMatchingBranch(path, branchNames);
     if (matchingBranchName == null)
         throw new Error(
@@ -24,20 +28,107 @@ function checkoutBranches(path, branchNames, { noSubmoduleUpdate }) {
                 branchNames.join(", "),
         );
 
-    runExec("git", ["checkout", matchingBranchName], { cwd: path });
+    console.log("Restore: " + path);
+    console.log("  Restore staged files");
     runExec("git", ["restore", "--staged", "."], { cwd: path });
-    if (!noSubmoduleUpdate) {
-        runExec("git", ["submodule", "update"], { cwd: path });
-        const gitModulesPath = join(path, ".gitmodules");
-        if (!existsSync(gitModulesPath)) {
-            return;
-        }
-        readGitmodules(gitModulesPath).forEach((gitmodule) => {
-            const moduleName = gitmodule.path;
-            const modulePath = resolve(path, moduleName);
-            checkoutBranches(modulePath, branchNames, { noSubmoduleUpdate });
-        });
+    console.log("  Restore unstaged files");
+    runExec("git", ["restore", "."], { cwd: path });
+    console.log("  Delete untracked files");
+    runExec("git", ["clean", "-f"], { cwd: path });
+    console.log("  Delete untracked dirs");
+    runExec("git", ["clean", "-fd"], { cwd: path });
+    console.log("  Check out branch: " + matchingBranchName);
+    runExec("git", ["checkout", matchingBranchName], { cwd: path });
+    console.log("  Restore staged files");
+    runExec("git", ["restore", "--staged", "."], { cwd: path });
+    console.log("  Restore unstaged files");
+    runExec("git", ["restore", "."], { cwd: path });
+    console.log("  Delete untracked files");
+    runExec("git", ["clean", "-f"], { cwd: path });
+    console.log("  Delete untracked dirs");
+    runExec("git", ["clean", "-fd"], { cwd: path });
+}
+
+const cpuThreadCount = require("os").cpus().length;
+
+/**
+ *
+ * @param {string} path
+ * @param {string | string[]} branchNames
+ * @param {object} options
+ * @param {boolean} options.noSubmoduleUpdate
+ * @returns {string[]}
+ */
+async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
+    const gitModulesPath = join(path, ".gitmodules");
+    if (!existsSync(gitModulesPath)) {
+        return;
     }
+    runExec(
+        "git",
+        ["submodule", "update", "--jobs", cpuThreadCount.toString()],
+        { cwd: path },
+    );
+    const subModuleTasks = readGitmodules(gitModulesPath).map((gitmodule) => {
+        const moduleName = gitmodule.path;
+        const modulePath = resolve(path, moduleName);
+        return checkoutBranches(modulePath, branchNames, options, console);
+    });
+    return await Promise.all(subModuleTasks);
+}
+
+/**
+ *
+ * @param {string} path
+ * @param {string | string[]} branchNames
+ * @returns {string[]}
+ */
+function checkoutBranchThread(path, branchNames) {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(__filename, {
+            workerData: {
+                path,
+                branchNames,
+            },
+        });
+
+        worker.on("message", resolve);
+        worker.on("error", (reason) => {
+            reject(reason);
+        });
+        worker.on("exit", (code) => {
+            if (code !== 0) {
+                reject(new Error(`Worker stopped with exit code: ${code}`));
+            }
+        });
+    });
+}
+
+/**
+ *
+ * @param {string} path
+ * @param {string | string[]} branchNames
+ * @param {object} options
+ * @param {boolean} options.noSubmoduleUpdate
+ * @param {import("../utils/output/console-wrapper").ConsoleBase} console
+ * @returns {Promise<string[]>}
+ */
+async function checkoutBranches(path, branchNames, options, console) {
+    console.log("Run queue for " + path);
+    const checkoutBranchTask = checkoutBranchThread(path, branchNames);
+
+    const { noSubmoduleUpdate } = options;
+    if (noSubmoduleUpdate) return;
+
+    const otherBranchTask = runSubmoduleUpdatesAndCheckout(
+        path,
+        branchNames,
+        options,
+    );
+    const lines = (
+        await Promise.all([checkoutBranchTask, otherBranchTask])
+    ).flatMap((x) => x);
+    return lines;
 }
 
 function getCommandLine() {
@@ -53,7 +144,18 @@ function showUsage() {
     );
 }
 
-if (module.id == ".") {
+if (!isMainThread) {
+    const console = createConsoleWrapper();
+    try {
+        checkoutBranch(workerData.path, workerData.branchNames, console);
+    } catch (e) {
+        if (e != null) {
+            e.output = console.contents;
+        }
+        throw e;
+    }
+    parentPort.postMessage(console.contents);
+} else if (module.id == ".") {
     const argsLeftOver = process.argv.slice(2);
     const acknowledged = pullFlag(
         argsLeftOver,
@@ -91,8 +193,18 @@ if (module.id == ".") {
 
     if (typeof repoDir != "string")
         throw new Error("A repo directory is required");
-    checkoutBranches(repoDir, branchNames, {
-        noSubmoduleUpdate: noSubmoduleUpdate,
+    const promise = checkoutBranches(
+        repoDir,
+        branchNames,
+        {
+            noSubmoduleUpdate: noSubmoduleUpdate,
+        },
+        console,
+    );
+    promise.then((lines) => {
+        for (const line of lines) {
+            console.log(line);
+        }
     });
 } else {
     module.exports.checkoutBranches = checkoutBranches;

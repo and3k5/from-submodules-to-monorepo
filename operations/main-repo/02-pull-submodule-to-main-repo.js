@@ -7,12 +7,14 @@ const { run } = require("../../utils/process/run");
  * @param {string} mainRepoDir
  * @param {import("../../utils/git/read-gitmodules").Submodule} submodule
  * @param {string} migrationBranchName
+ * @param {import("../../utils/output/console-wrapper").ConsoleBase} console
  * @returns {Promise<void>}
  */
 async function pullSubmoduleToMainRepo(
     mainRepoDir,
     submodule,
     migrationBranchName,
+    console,
 ) {
     console.log("   Pulling submodule into main repo");
 

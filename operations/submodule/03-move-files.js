@@ -9,8 +9,9 @@ const { runExec } = require("../../utils/process/run-exec");
  * @param {string} mainRepoDir
  * @param {string} fullPath
  * @param {import("../../utils/git/read-gitmodules").Submodule} submodule
+ * @param {import("../../utils/output/console-wrapper").ConsoleBase} console
  */
-function moveFiles(mainRepoDir, fullPath, submodule) {
+function moveFiles(mainRepoDir, fullPath, submodule, console) {
     const targetPath = join(fullPath, submodule.path);
     console.log(
         `   Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
