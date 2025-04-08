@@ -17,6 +17,9 @@ const {
     applyTransformationForSubmodule,
 } = require("./operations/submodule/worker-thread-1");
 const { whileIndexLock } = require("./utils/git/while-index-lock");
+const {
+    ensureSameCaseForPath,
+} = require("./utils/path/ensure-same-case-for-path");
 
 /**
  *
@@ -71,8 +74,10 @@ async function performTransformation(
     let workersLeft = totalWorkers;
 
     for (const submodule of submodules) {
-        console.log("Queued " + submodule.path);
-        const fullPath = resolve(mainRepoDir, submodule.path);
+        const fullPath = ensureSameCaseForPath(
+            resolve(mainRepoDir, submodule.path),
+        );
+        console.log("Queued " + relative(mainRepoDir, fullPath));
         workers.push(
             applyTransformationForSubmodule(
                 mainRepoDir,
@@ -116,7 +121,9 @@ async function performTransformation(
 
     for (const data of workerResults) {
         const { submodule, logOutput } = data;
-        const fullPath = resolve(mainRepoDir, submodule.path);
+        const fullPath = ensureSameCaseForPath(
+            resolve(mainRepoDir, submodule.path),
+        );
         for (const line of logOutput) {
             console.log(line);
         }

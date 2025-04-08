@@ -1,8 +1,11 @@
 const { existsSync, renameSync, mkdirSync } = require("node:fs");
-const { relative, join } = require("node:path");
+const { relative, join, basename } = require("node:path");
 const { run } = require("../../utils/process/run");
 const { sameDirName } = require("../../utils/path/same-dir-name");
 const { runExec } = require("../../utils/process/run-exec");
+const {
+    ensureSameCaseForPath,
+} = require("../../utils/path/ensure-same-case-for-path");
 
 /**
  *
@@ -12,12 +15,12 @@ const { runExec } = require("../../utils/process/run-exec");
  * @param {import("../../utils/output/console-wrapper").ConsoleBase} console
  */
 function moveFiles(mainRepoDir, fullPath, submodule, console) {
-    const targetPath = join(fullPath, submodule.path);
+    const targetPath = ensureSameCaseForPath(join(fullPath, submodule.path));
     console.log(
         `   Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
     );
     const targetPathExists = existsSync(targetPath);
-    const tempNameForExistingPath = `${submodule.path}_TEMP_DUP`;
+    const tempNameForExistingPath = `${basename(targetPath)}_TEMP_DUP`;
     if (targetPathExists) {
         renameSync(targetPath, join(fullPath, tempNameForExistingPath));
     }
@@ -33,7 +36,8 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
 
     for (const entry of entries) {
         if (sameDirName(entry, submodule.path)) continue;
-        run("git", ["mv", `${fullPath}/${entry}`, targetPath], {
+        const entryPath = `${fullPath}/${entry}`;
+        run("git", ["mv", entryPath, targetPath], {
             cwd: fullPath,
         });
     }
@@ -41,7 +45,7 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
     if (targetPathExists) {
         renameSync(
             join(fullPath, tempNameForExistingPath),
-            join(targetPath, submodule.path),
+            ensureSameCaseForPath(join(targetPath, submodule.path)),
         );
     }
 
