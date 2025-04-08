@@ -2,6 +2,7 @@ const {
     autoResolveConflicts,
 } = require("../../transformation/auto-resolve-conflicts");
 const { run } = require("../../utils/process/run");
+const { runExec } = require("../../utils/process/run-exec");
 
 /**
  * @param {string} mainRepoDir
@@ -67,7 +68,7 @@ async function pullSubmoduleToMainRepo(
         cwd: mainRepoDir,
     });
     try {
-        run(
+        runExec(
             "git",
             [
                 "merge",
@@ -81,7 +82,7 @@ async function pullSubmoduleToMainRepo(
         );
     } catch (error) {
         if (
-            error.status !== 1 ||
+            error.code !== 1 ||
             !(await autoResolveConflicts(mainRepoDir, false))
         ) {
             throw error;
