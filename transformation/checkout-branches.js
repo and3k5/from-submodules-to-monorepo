@@ -37,6 +37,8 @@ function checkoutBranch(path, branchNames, console) {
     runExec("git", ["clean", "-f"], { cwd: path });
     console.log("  Delete untracked dirs");
     runExec("git", ["clean", "-fd"], { cwd: path });
+    console.log("  Delete untracked + excluded dirs");
+    runExec("git", ["clean", "-fdx"], { cwd: path });
     console.log("  Check out branch: " + matchingBranchName);
     runExec("git", ["checkout", matchingBranchName], { cwd: path });
     console.log("  Restore staged files");
@@ -47,6 +49,8 @@ function checkoutBranch(path, branchNames, console) {
     runExec("git", ["clean", "-f"], { cwd: path });
     console.log("  Delete untracked dirs");
     runExec("git", ["clean", "-fd"], { cwd: path });
+    console.log("  Delete untracked + excluded dirs");
+    runExec("git", ["clean", "-fdx"], { cwd: path });
 }
 
 const cpuThreadCount = require("os").cpus().length;
