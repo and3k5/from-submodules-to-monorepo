@@ -6,7 +6,6 @@ const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
 const { pullFlag } = require("./utils/args/pull-flag");
 const { pullValue } = require("./utils/args/pull-value");
-const { pushToOrigin } = require("./operations/submodule/04-push-to-origin");
 const {
     removeSubmodule,
 } = require("./operations/main-repo/01-remove-submodule");
@@ -21,6 +20,7 @@ const {
     ensureSameCaseForPath,
 } = require("./utils/path/ensure-same-case-for-path");
 const { checkoutBranches } = require("./transformation/checkout-branches");
+const { runExec } = require("./utils/process/run-exec");
 
 /**
  *
@@ -36,6 +36,7 @@ async function performTransformation(
         migrationBranchName,
         resumeFromExistingBranch,
         resetWithMasterOrMainBranches,
+        deleteExistingBranches,
     },
 ) {
     if (typeof mainRepoDir != "string")
@@ -68,6 +69,17 @@ async function performTransformation(
     );
     console.log(`   ${migrationBranchName}`);
 
+    if (deleteExistingBranches) {
+        try {
+            runExec("git", ["branch", "-D", migrationBranchName], {
+                cwd: mainRepoDir,
+                stdio: "ignore",
+            });
+        } catch {
+            // nothing
+        }
+    }
+
     run(
         "git",
         [
@@ -89,6 +101,7 @@ async function performTransformation(
 
     const totalWorkers = submodules.length;
     let workersLeft = totalWorkers;
+    let failed = 0;
 
     for (const submodule of submodules) {
         const fullPath = ensureSameCaseForPath(
@@ -102,6 +115,7 @@ async function performTransformation(
                 fullPath,
                 submodule,
                 submodules,
+                deleteExistingBranches,
             )
                 .then((logOutput) => ({
                     submodule,
@@ -110,6 +124,7 @@ async function performTransformation(
                     error: null,
                 }))
                 .catch((err) => {
+                    failed++;
                     return {
                         submodule,
                         logOutput: [],
@@ -120,7 +135,10 @@ async function performTransformation(
                 .finally(() => {
                     workersLeft--;
                     console.log(
-                        `Workers left: ${workersLeft} / ${totalWorkers}`,
+                        `Workers left: ${workersLeft} / ${totalWorkers}` +
+                            (failed > 0
+                                ? ` \x1b[31m(${failed} failed)\x1b[0m`
+                                : ""),
                     );
                 }),
         );
@@ -144,7 +162,6 @@ async function performTransformation(
         for (const line of logOutput) {
             console.log(line);
         }
-        pushToOrigin(fullPath, migrationBranchName, console);
         await whileIndexLock(fullPath);
         await removeSubmodule(mainRepoDir, submodule, console);
         await pullSubmoduleToMainRepo(
@@ -184,7 +201,14 @@ if (module.id == ".") {
         argsLeftOver,
         "--resume-from-existing-branch",
     );
-    const resetWithMasterOrMainBranches = pullFlag(argsLeftOver, "--reset-with-master-or-main-branches");
+    const resetWithMasterOrMainBranches = pullFlag(
+        argsLeftOver,
+        "--reset-with-master-or-main-branches",
+    );
+    const deleteExistingBranches = pullFlag(
+        argsLeftOver,
+        "--delete-existing-branches",
+    );
     const mainRepoDir = pullValue(argsLeftOver);
 
     if (mainRepoDir == null) {
@@ -193,12 +217,16 @@ if (module.id == ".") {
         return;
     }
 
-    const migrationBranchName = pullValue(argsLeftOver);
-
-    if (migrationBranchName == null) {
-        console.error("Missing branch name");
+    if (argsLeftOver.length > 1) {
+        console.error("Invalid args");
         showUsage();
         return;
+    }
+
+    let migrationBranchName = pullValue(argsLeftOver);
+
+    if (migrationBranchName == null || migrationBranchName == "") {
+        migrationBranchName = "from-submodules-to-monorepo";
     }
 
     if (!existsSync(mainRepoDir)) {
@@ -223,6 +251,7 @@ if (module.id == ".") {
         migrationBranchName,
         resumeFromExistingBranch,
         resetWithMasterOrMainBranches,
+        deleteExistingBranches,
     });
 } else {
     module.exports.performTransformation = performTransformation;

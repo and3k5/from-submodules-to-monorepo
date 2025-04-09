@@ -13,6 +13,7 @@ const {
     Worker,
 } = require("worker_threads");
 const { createConsoleWrapper } = require("../utils/output/console-wrapper");
+const { whileIndexLock } = require("../utils/git/while-index-lock");
 
 /**
  *
@@ -20,7 +21,7 @@ const { createConsoleWrapper } = require("../utils/output/console-wrapper");
  * @param {string | string[]} branchNames
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
  */
-function checkoutBranch(path, branchNames, console) {
+async function checkoutBranch(path, branchNames, console) {
     const matchingBranchName = getMatchingBranch(path, branchNames);
     if (matchingBranchName == null)
         throw new Error(
@@ -28,29 +29,39 @@ function checkoutBranch(path, branchNames, console) {
                 branchNames.join(", "),
         );
 
+    await whileIndexLock(path);
     console.log("Restore: " + path);
     console.log("  Restore staged files");
-    runExec("git", ["restore", "--staged", "."], { cwd: path });
+    runExec("git", ["restore", "--staged", "."], {
+        cwd: path,
+        stdio: "ignore",
+    });
     console.log("  Restore unstaged files");
-    runExec("git", ["restore", "."], { cwd: path });
+    runExec("git", ["restore", "."], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked files");
-    runExec("git", ["clean", "-f"], { cwd: path });
+    runExec("git", ["clean", "-f"], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked dirs");
-    runExec("git", ["clean", "-fd"], { cwd: path });
+    runExec("git", ["clean", "-fd"], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked + excluded dirs");
-    runExec("git", ["clean", "-fdx"], { cwd: path });
+    runExec("git", ["clean", "-fdx"], { cwd: path, stdio: "ignore" });
     console.log("  Check out branch: " + matchingBranchName);
-    runExec("git", ["checkout", matchingBranchName], { cwd: path });
+    runExec("git", ["checkout", matchingBranchName], {
+        cwd: path,
+        stdio: "ignore",
+    });
     console.log("  Restore staged files");
-    runExec("git", ["restore", "--staged", "."], { cwd: path });
+    runExec("git", ["restore", "--staged", "."], {
+        cwd: path,
+        stdio: "ignore",
+    });
     console.log("  Restore unstaged files");
-    runExec("git", ["restore", "."], { cwd: path });
+    runExec("git", ["restore", "."], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked files");
-    runExec("git", ["clean", "-f"], { cwd: path });
+    runExec("git", ["clean", "-f"], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked dirs");
-    runExec("git", ["clean", "-fd"], { cwd: path });
+    runExec("git", ["clean", "-fd"], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked + excluded dirs");
-    runExec("git", ["clean", "-fdx"], { cwd: path });
+    runExec("git", ["clean", "-fdx"], { cwd: path, stdio: "ignore" });
 }
 
 const cpuThreadCount = require("os").cpus().length;
@@ -61,31 +72,31 @@ const cpuThreadCount = require("os").cpus().length;
  * @param {string | string[]} branchNames
  * @param {object} options
  * @param {boolean} options.noSubmoduleUpdate
- * @returns {string[]}
+ * @returns {Promise<string[]>}
  */
 async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
     const gitModulesPath = join(path, ".gitmodules");
     if (!existsSync(gitModulesPath)) {
-        return;
+        return [];
     }
     runExec(
         "git",
         ["submodule", "update", "--jobs", cpuThreadCount.toString()],
-        { cwd: path },
+        { cwd: path, stdio: "ignore" },
     );
     const subModuleTasks = readGitmodules(gitModulesPath).map((gitmodule) => {
         const moduleName = gitmodule.path;
         const modulePath = resolve(path, moduleName);
         return checkoutBranches(modulePath, branchNames, options, console);
     });
-    return await Promise.all(subModuleTasks);
+    return (await Promise.all(subModuleTasks)).flatMap((x) => x);
 }
 
 /**
  *
  * @param {string} path
  * @param {string | string[]} branchNames
- * @returns {string[]}
+ * @returns {Promise<string[]>}
  */
 function checkoutBranchThread(path, branchNames) {
     return new Promise((resolve, reject) => {
@@ -119,19 +130,17 @@ function checkoutBranchThread(path, branchNames) {
  */
 async function checkoutBranches(path, branchNames, options, console) {
     console.log("Run queue for " + path);
-    const checkoutBranchTask = checkoutBranchThread(path, branchNames);
+    const checkoutBranchResult = await checkoutBranchThread(path, branchNames);
 
     const { noSubmoduleUpdate } = options;
     if (noSubmoduleUpdate) return;
 
-    const otherBranchTask = runSubmoduleUpdatesAndCheckout(
+    const otherBranchResult = await runSubmoduleUpdatesAndCheckout(
         path,
         branchNames,
         options,
     );
-    const lines = (
-        await Promise.all([checkoutBranchTask, otherBranchTask])
-    ).flatMap((x) => x);
+    const lines = [checkoutBranchResult, otherBranchResult].flatMap((x) => x);
     return lines;
 }
 
@@ -151,14 +160,17 @@ function showUsage() {
 if (!isMainThread) {
     const console = createConsoleWrapper();
     try {
-        checkoutBranch(workerData.path, workerData.branchNames, console);
+        checkoutBranch(workerData.path, workerData.branchNames, console).then(
+            () => {
+                parentPort.postMessage(console.contents);
+            },
+        );
     } catch (e) {
         if (e != null) {
             e.output = console.contents;
         }
         throw e;
     }
-    parentPort.postMessage(console.contents);
 } else if (module.id == ".") {
     const argsLeftOver = process.argv.slice(2);
     const acknowledged = pullFlag(

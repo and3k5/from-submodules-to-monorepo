@@ -142,7 +142,12 @@ async function createSubModules() {
                             );
                             run(
                                 "git",
-                                ["fetch", `origin_${pullFrom}`, "master"],
+                                [
+                                    "fetch",
+                                    "--no-auto-maintenance",
+                                    `origin_${pullFrom}`,
+                                    "master",
+                                ],
                                 {
                                     cwd: actualDir,
                                 },

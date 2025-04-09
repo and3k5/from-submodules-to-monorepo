@@ -8,6 +8,7 @@ const { introduceModule } = require("./01-intro");
 const { checkoutModule } = require("./02-checkout");
 const { moveFiles } = require("./03-move-files");
 const { createConsoleWrapper } = require("../../utils/output/console-wrapper");
+const { pushToOrigin } = require("./04-push-to-origin");
 
 if (isMainThread) {
     /**
@@ -16,6 +17,7 @@ if (isMainThread) {
      * @param {string} fullPath
      * @param {import('../git/read-gitmodules').Submodule} submodule
      * @param {import('../git/read-gitmodules').Submodule[]} submodules
+     * @param {boolean} deleteExistingBranches
      * @returns {Promise<string[]>}
      */
     function applyTransformationForSubmodule(
@@ -24,6 +26,7 @@ if (isMainThread) {
         fullPath,
         submodule,
         submodules,
+        deleteExistingBranches,
     ) {
         return new Promise((resolve, reject) => {
             const worker = new Worker(__filename, {
@@ -33,6 +36,7 @@ if (isMainThread) {
                     submodules,
                     migrationBranchName,
                     mainRepoDir,
+                    deleteExistingBranches,
                 },
             });
 
@@ -55,11 +59,24 @@ if (isMainThread) {
     const submodules = workerData.submodules;
     const migrationBranchName = workerData.migrationBranchName;
     const mainRepoDir = workerData.mainRepoDir;
+    const deleteExistingBranches = workerData.deleteExistingBranches;
 
     const console = createConsoleWrapper();
     introduceModule(submodule, submodules, console);
-    checkoutModule(fullPath, migrationBranchName, console);
+    checkoutModule(
+        fullPath,
+        migrationBranchName,
+        deleteExistingBranches,
+        console,
+    );
     moveFiles(mainRepoDir, fullPath, submodule, console);
+    pushToOrigin(
+        mainRepoDir,
+        fullPath,
+        migrationBranchName,
+        submodule,
+        console,
+    );
 
     parentPort.postMessage(console.contents);
 }

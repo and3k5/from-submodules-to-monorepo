@@ -2,6 +2,11 @@ const { existsSync, readdirSync } = require("fs");
 const { platform } = require("os");
 const { dirname, basename, join } = require("path");
 
+/**
+ *
+ * @param {string} path
+ * @returns {string}
+ */
 function ensureSameCaseForPath(path) {
     if (platform() !== "win32") {
         return path;

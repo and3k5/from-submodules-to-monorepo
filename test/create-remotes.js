@@ -9,21 +9,11 @@ const { gitAdd } = require("./utils/git/git-add");
 const { gitCommit } = require("./utils/git/git-commit");
 const { gitPush } = require("./utils/git/git-push");
 const { cleanWithRetries } = require("./utils/fs/clean-with-retries");
+const {
+    createFileSystemRemote,
+} = require("../utils/git/create-file-system-remote");
 
 const remoteDir = resolve(__dirname, "remote");
-
-function makeRemote(name) {
-    const dirPath = resolve(remoteDir, name);
-    mkdirSync(dirPath);
-    run("git", ["init", "--bare"], {
-        cwd: dirPath,
-        encoding: "utf-8",
-    });
-    run("git", ["symbolic-ref", "HEAD", "refs/heads/master"], {
-        cwd: dirPath,
-        encoding: "utf-8",
-    });
-}
 
 async function createRemotes() {
     console.log("create remotes:");
@@ -46,7 +36,7 @@ async function createRemotes() {
         console.log("   - Module: " + module.name);
 
         console.log("     tempDir: " + tempDir);
-        makeRemote(module.name + ".git");
+        createFileSystemRemote(remoteDir, module.name);
         const actualDir = cloneRepo(module.name, tempDir);
 
         run("git", ["config", "user.name", "example user"], { cwd: actualDir });

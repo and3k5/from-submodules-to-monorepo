@@ -1,8 +1,18 @@
 const {
     autoResolveConflicts,
 } = require("../../transformation/auto-resolve-conflicts");
+const {
+    createFileSystemRemote,
+} = require("../../utils/git/create-file-system-remote");
+const {
+    fileSystemRemoteUrl,
+} = require("../../utils/git/file-system-remote-url");
 const { run } = require("../../utils/process/run");
 const { runExec } = require("../../utils/process/run-exec");
+const { getRemotePath } = require("../../utils/storage/get-temp-remote-path");
+const {
+    getOriginNameForSubmodule,
+} = require("../../utils/git/origin-name-for-submodule");
 
 /**
  * @param {string} mainRepoDir
@@ -19,54 +29,37 @@ async function pullSubmoduleToMainRepo(
 ) {
     console.log("   Pulling submodule into main repo");
 
-    const remoteUrl = submodule.url;
+    const localRemotePath = createFileSystemRemote(
+        getRemotePath(),
+        getOriginNameForSubmodule(mainRepoDir, submodule),
+    );
+    const remoteUrl = fileSystemRemoteUrl(localRemotePath);
     const remoteName = `origin_${submodule.path}`;
 
-    let remoteExists = false;
-    let createNewRemote = true;
     try {
-        const existingRemoteUrl = run(
-            "git",
-            ["remote", "get-url", "--all", remoteName],
-            {
-                cwd: mainRepoDir,
-                encoding: "utf-8",
-            },
-        ).stdout.trim();
-        if (existingRemoteUrl != null && existingRemoteUrl != "") {
-            remoteExists = true;
-        }
-        if (remoteExists) {
-            if (existingRemoteUrl === remoteUrl) {
-                createNewRemote = false;
-                console.log(`   Remote ${remoteName} already exists!`);
-            } else {
-                console.warn(
-                    `   Remote ${remoteName} already exists but url is ${existingRemoteUrl}`,
-                );
-            }
-        }
-    } catch {
-        remoteExists = false;
-    }
-
-    if (!remoteExists || createNewRemote) {
-        if (remoteExists) {
-            throw new Error("Origin exists but has different url");
-        }
-
-        console.log(`   Adding remote: ${remoteUrl}`);
-
-        run("git", ["remote", "add", remoteName, remoteUrl], {
+        runExec("git", ["remote", "remove", remoteName], {
+            stdio: "ignore",
             cwd: mainRepoDir,
         });
+    } catch {
+        // suppress
     }
+
+    console.log(`   Adding remote: ${remoteUrl}`);
+
+    run("git", ["remote", "add", remoteName, remoteUrl], {
+        cwd: mainRepoDir,
+    });
 
     console.log(`   Pull origin branch into main repo`);
 
-    run("git", ["fetch", remoteName, migrationBranchName], {
-        cwd: mainRepoDir,
-    });
+    run(
+        "git",
+        ["fetch", "--no-auto-maintenance", remoteName, migrationBranchName],
+        {
+            cwd: mainRepoDir,
+        },
+    );
     try {
         runExec(
             "git",
@@ -78,11 +71,11 @@ async function pullSubmoduleToMainRepo(
                 "-Xno-renames",
                 `${remoteName}/${migrationBranchName}`,
             ],
-            { cwd: mainRepoDir },
+            { cwd: mainRepoDir, stdio: "ignore" },
         );
     } catch (error) {
         if (
-            error.code !== 1 ||
+            error.status !== 1 ||
             !(await autoResolveConflicts(mainRepoDir, false))
         ) {
             throw error;
