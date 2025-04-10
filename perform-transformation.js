@@ -34,6 +34,8 @@ const {
  * @param {boolean?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
  * @param {boolean?} options.deleteExistingBranches Delete existing branches
  * @param {boolean?} options.noThreads Don't run in parallel threads
+ * @param {boolean?} options.pullRemotes Pull remotes for all submodules and main repo
+ * @param {boolean?} options.nukeRemote Safety switch to avoid pulling remotes uncontrollably
  */
 async function performTransformation(
     mainRepoDir,
@@ -43,6 +45,8 @@ async function performTransformation(
         resetWithMasterOrMainBranches,
         deleteExistingBranches,
         noThreads,
+        pullRemotes,
+        nukeRemote,
     },
 ) {
     if (typeof mainRepoDir != "string")
@@ -63,6 +67,8 @@ async function performTransformation(
             {
                 noSubmoduleUpdate: false,
                 noThreads: noThreads,
+                pullRemotes: pullRemotes,
+                nukeRemote: nukeRemote,
             },
             console,
         );
@@ -216,6 +222,18 @@ function showUsage() {
                         "Required if --pull-remotes is used without --nuke-remote.",
                 },
                 {
+                    identifier: "--pull-remotes",
+                    description:
+                        "Pull remotes for all submodules and main repo.\nMust be used with either --no-threads or --nuke-remote.",
+                },
+                {
+                    identifier: "--nuke-remote",
+                    description:
+                        "Safety switch to avoid pulling remotes uncontrollably.",
+                    requiredRemarks:
+                        "Required if --pull-remotes is used without --no-threads.",
+                },
+                {
                     identifier: "--delete-existing-branches",
                     description:
                         "If any branch exist (<branch-name>) then delete them.",
@@ -262,6 +280,8 @@ if (module.id == ".") {
         "--delete-existing-branches",
     );
     const noThreads = pullFlag(argsLeftOver, "--no-threads");
+    const pullRemotes = pullFlag(argsLeftOver, "--pull-remotes");
+    const nukeRemote = pullFlag(argsLeftOver, "--nuke-remote");
     const mainRepoDir = pullValue(argsLeftOver);
 
     if (mainRepoDir == null) {
@@ -286,6 +306,16 @@ if (module.id == ".") {
         throw new Error(`The directory does not exist: ${mainRepoDir}`);
     }
 
+    if (pullRemotes) {
+        if (!nukeRemote && !noThreads) {
+            console.error(
+                "--pull-remotes requires --no-threads or --nuke-remote",
+            );
+            showUsage();
+            return;
+        }
+    }
+
     if (!acknowledged) {
         console.log("You must acknowledge the risks:");
         console.log("Use it at your own risk.");
@@ -306,6 +336,8 @@ if (module.id == ".") {
         resetWithMasterOrMainBranches,
         deleteExistingBranches,
         noThreads,
+        pullRemotes,
+        nukeRemote,
     });
 } else {
     module.exports.performTransformation = performTransformation;

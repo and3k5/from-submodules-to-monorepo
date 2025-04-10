@@ -22,9 +22,19 @@ const {
  *
  * @param {string} path
  * @param {string | string[]} branchNames
+ * @param {object} options
+ * @param {boolean?} options.pullRemotes
+ * @param {boolean?} options.nukeRemote
+ * @param {boolean} isSubmodule
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
  */
-async function checkoutBranch(path, branchNames, console) {
+async function checkoutBranch(
+    path,
+    branchNames,
+    options,
+    console,
+    isSubmodule,
+) {
     const matchingBranchName = getMatchingBranch(path, branchNames);
     if (matchingBranchName == null)
         throw new Error(
@@ -65,6 +75,20 @@ async function checkoutBranch(path, branchNames, console) {
     runExec("git", ["clean", "-fd"], { cwd: path, stdio: "ignore" });
     console.log("  Delete untracked + excluded dirs");
     runExec("git", ["clean", "-fdx"], { cwd: path, stdio: "ignore" });
+    if (options.pullRemotes === true) {
+        if (isSubmodule) {
+            console.log("  Merging changes from remote");
+            runExec("git", ["fetch", "--no-auto-maintenance"], {
+                cwd: path,
+                stdio: "ignore",
+            });
+        }
+        console.log("  Merging changes from remote");
+        runExec("git", ["merge", "--ff-only"], {
+            cwd: path,
+            encoding: "utf-8",
+        });
+    }
 }
 
 const cpuThreadCount = require("os").cpus().length;
@@ -76,6 +100,8 @@ const cpuThreadCount = require("os").cpus().length;
  * @param {object} options
  * @param {boolean} options.noSubmoduleUpdate
  * @param {boolean?} options.noThreads
+ * @param {boolean?} options.pullRemotes
+ * @param {boolean?} options.nukeRemote
  * @returns {Promise<string[]>}
  */
 async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
@@ -85,7 +111,13 @@ async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
     }
     runExec(
         "git",
-        ["submodule", "update", "--jobs", cpuThreadCount.toString()],
+        [
+            "submodule",
+            "update",
+            "--jobs",
+            cpuThreadCount.toString(),
+            ...(options.pullRemotes === true ? ["--remote"] : []),
+        ],
         { cwd: path, stdio: "ignore" },
     );
     /**
@@ -100,6 +132,7 @@ async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
             branchNames,
             options,
             console,
+            true,
         );
         if (options.noThreads === true) {
             await task;
@@ -113,14 +146,20 @@ async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
  *
  * @param {string} path
  * @param {string | string[]} branchNames
+ * @param {object} options
+ * @param {boolean?} options.pullRemotes
+ * @param {boolean?} options.nukeRemote
+ * @param {boolean} isSubmodule
  * @returns {Promise<string[]>}
  */
-function checkoutBranchThread(path, branchNames) {
+function checkoutBranchThread(path, branchNames, options, isSubmodule) {
     return new Promise((resolve, reject) => {
         const worker = new Worker(__filename, {
             workerData: {
                 path,
                 branchNames,
+                pullRemotes: options.pullRemotes,
+                isSubmodule: isSubmodule,
             },
         });
 
@@ -143,10 +182,19 @@ function checkoutBranchThread(path, branchNames) {
  * @param {object} options
  * @param {boolean} options.noSubmoduleUpdate
  * @param {boolean?} options.noThreads
+ * @param {boolean?} options.pullRemotes
+ * @param {boolean?} options.nukeRemote
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
+ * @param {boolean?} [isSubmodule]
  * @returns {Promise<string[]>}
  */
-async function checkoutBranches(path, branchNames, options, console) {
+async function checkoutBranches(
+    path,
+    branchNames,
+    options,
+    console,
+    isSubmodule,
+) {
     console.log("Run queue for " + path);
 
     /**
@@ -157,12 +205,16 @@ async function checkoutBranches(path, branchNames, options, console) {
         checkoutBranchResult = await checkoutBranchThread(
             path,
             branchNames,
+            options,
+            isSubmodule === true,
         );
     else {
         await checkoutBranch(
             path,
             branchNames,
+            options,
             console,
+            isSubmodule === true,
         );
         checkoutBranchResult =
             "contents" in console && Array.isArray(console.contents)
@@ -204,6 +256,18 @@ function showUsage() {
                         "Required if --pull-remotes is used without --nuke-remote.",
                 },
                 {
+                    identifier: "--pull-remotes",
+                    description:
+                        "Pull remotes for all submodules and main repo.\nMust be used with either --no-threads or --nuke-remote.",
+                },
+                {
+                    identifier: "--nuke-remote",
+                    description:
+                        "Safety switch to avoid pulling remotes uncontrollably.",
+                    requiredRemarks:
+                        "Required if --pull-remotes is used without --no-threads.",
+                },
+                {
                     identifier: "--no-submodule-update",
                     description: "Dont update submodules",
                 },
@@ -228,11 +292,18 @@ function showUsage() {
 if (!isMainThread) {
     const console = createConsoleWrapper();
     try {
-        checkoutBranch(workerData.path, workerData.branchNames, console).then(
-            () => {
-                parentPort.postMessage(console.contents);
+        checkoutBranch(
+            workerData.path,
+            workerData.branchNames,
+            {
+                pullRemotes: workerData.pullRemotes,
+                nukeRemote: workerData.nukeRemote,
             },
-        );
+            console,
+            workerData.isSubmodule,
+        ).then(() => {
+            parentPort.postMessage(console.contents);
+        });
     } catch (e) {
         if (e != null) {
             e.output = console.contents;
@@ -250,6 +321,8 @@ if (!isMainThread) {
         "--acknowledge-risks-and-continue",
     );
     const noSubmoduleUpdate = pullFlag(argsLeftOver, "--no-submodule-update");
+    const pullRemotes = pullFlag(argsLeftOver, "--pull-remotes");
+    const nukeRemote = pullFlag(argsLeftOver, "--nuke-remote");
     const noThreads = pullFlag(argsLeftOver, "--no-threads");
     const repoDir = pullValue(argsLeftOver);
     if (argsLeftOver.length == 0) {
@@ -267,6 +340,16 @@ if (!isMainThread) {
 
     if (!existsSync(repoDir)) {
         throw new Error(`The directory does not exist: ${repoDir}`);
+    }
+
+    if (pullRemotes) {
+        if (!nukeRemote && !noThreads) {
+            console.error(
+                "--pull-remotes requires --no-threads or --nuke-remote",
+            );
+            showUsage();
+            return;
+        }
     }
 
     if (branchNames == null || branchNames.length == 0) {
@@ -292,6 +375,7 @@ if (!isMainThread) {
         branchNames,
         {
             noSubmoduleUpdate: noSubmoduleUpdate,
+            pullRemotes: pullRemotes,
             noThreads: noThreads,
         },
         console,
