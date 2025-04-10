@@ -75,6 +75,7 @@ const cpuThreadCount = require("os").cpus().length;
  * @param {string | string[]} branchNames
  * @param {object} options
  * @param {boolean} options.noSubmoduleUpdate
+ * @param {boolean?} options.noThreads
  * @returns {Promise<string[]>}
  */
 async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
@@ -87,11 +88,24 @@ async function runSubmoduleUpdatesAndCheckout(path, branchNames, options) {
         ["submodule", "update", "--jobs", cpuThreadCount.toString()],
         { cwd: path, stdio: "ignore" },
     );
-    const subModuleTasks = readGitmodules(gitModulesPath).map((gitmodule) => {
+    /**
+     * @type {Array<ReturnType<typeof checkoutBranches>>}
+     */
+    const subModuleTasks = [];
+    for (const gitmodule of readGitmodules(gitModulesPath)) {
         const moduleName = gitmodule.path;
         const modulePath = resolve(path, moduleName);
-        return checkoutBranches(modulePath, branchNames, options, console);
-    });
+        const task = checkoutBranches(
+            modulePath,
+            branchNames,
+            options,
+            console,
+        );
+        if (options.noThreads === true) {
+            await task;
+        }
+        subModuleTasks.push(task);
+    }
     return (await Promise.all(subModuleTasks)).flatMap((x) => x);
 }
 
@@ -128,12 +142,33 @@ function checkoutBranchThread(path, branchNames) {
  * @param {string | string[]} branchNames
  * @param {object} options
  * @param {boolean} options.noSubmoduleUpdate
+ * @param {boolean?} options.noThreads
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
  * @returns {Promise<string[]>}
  */
 async function checkoutBranches(path, branchNames, options, console) {
     console.log("Run queue for " + path);
-    const checkoutBranchResult = await checkoutBranchThread(path, branchNames);
+
+    /**
+     * @type {Array<string>}
+     */
+    let checkoutBranchResult;
+    if (options.noThreads !== true)
+        checkoutBranchResult = await checkoutBranchThread(
+            path,
+            branchNames,
+        );
+    else {
+        await checkoutBranch(
+            path,
+            branchNames,
+            console,
+        );
+        checkoutBranchResult =
+            "contents" in console && Array.isArray(console.contents)
+                ? console.contents
+                : [];
+    }
 
     const { noSubmoduleUpdate } = options;
     if (noSubmoduleUpdate) return;
@@ -161,6 +196,12 @@ function showUsage() {
                     identifier: "--acknowledge-risks-and-continue",
                     description: "Acknowledge the risks",
                     required: true,
+                },
+                {
+                    identifier: "--no-threads",
+                    description: "Don't run in parallel threads.",
+                    requiredRemarks:
+                        "Required if --pull-remotes is used without --nuke-remote.",
                 },
                 {
                     identifier: "--no-submodule-update",
@@ -209,6 +250,7 @@ if (!isMainThread) {
         "--acknowledge-risks-and-continue",
     );
     const noSubmoduleUpdate = pullFlag(argsLeftOver, "--no-submodule-update");
+    const noThreads = pullFlag(argsLeftOver, "--no-threads");
     const repoDir = pullValue(argsLeftOver);
     if (argsLeftOver.length == 0) {
         console.error("Missing args");
@@ -250,6 +292,7 @@ if (!isMainThread) {
         branchNames,
         {
             noSubmoduleUpdate: noSubmoduleUpdate,
+            noThreads: noThreads,
         },
         console,
     );

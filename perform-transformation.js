@@ -33,6 +33,7 @@ const {
  * @param {boolean?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
  * @param {boolean?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
  * @param {boolean?} options.deleteExistingBranches Delete existing branches
+ * @param {boolean?} options.noThreads Don't run in parallel threads
  */
 async function performTransformation(
     mainRepoDir,
@@ -41,6 +42,7 @@ async function performTransformation(
         resumeFromExistingBranch,
         resetWithMasterOrMainBranches,
         deleteExistingBranches,
+        noThreads,
     },
 ) {
     if (typeof mainRepoDir != "string")
@@ -60,6 +62,7 @@ async function performTransformation(
             ["main", "master"],
             {
                 noSubmoduleUpdate: false,
+                noThreads: noThreads,
             },
             console,
         );
@@ -112,40 +115,42 @@ async function performTransformation(
             resolve(mainRepoDir, submodule.path),
         );
         console.log("Queued " + relative(mainRepoDir, fullPath));
-        workers.push(
-            applyTransformationForSubmodule(
-                mainRepoDir,
-                migrationBranchName,
-                fullPath,
+        const workerThread = applyTransformationForSubmodule(
+            mainRepoDir,
+            migrationBranchName,
+            fullPath,
+            submodule,
+            submodules,
+            deleteExistingBranches,
+        )
+            .then((logOutput) => ({
                 submodule,
-                submodules,
-                deleteExistingBranches,
-            )
-                .then((logOutput) => ({
+                logOutput,
+                success: true,
+                error: null,
+            }))
+            .catch((err) => {
+                failed++;
+                return {
                     submodule,
-                    logOutput,
-                    success: true,
-                    error: null,
-                }))
-                .catch((err) => {
-                    failed++;
-                    return {
-                        submodule,
-                        logOutput: [],
-                        success: false,
-                        error: err,
-                    };
-                })
-                .finally(() => {
-                    workersLeft--;
-                    console.log(
-                        `Workers left: ${workersLeft} / ${totalWorkers}` +
-                            (failed > 0
-                                ? ` \x1b[31m(${failed} failed)\x1b[0m`
-                                : ""),
-                    );
-                }),
-        );
+                    logOutput: [],
+                    success: false,
+                    error: err,
+                };
+            })
+            .finally(() => {
+                workersLeft--;
+                console.log(
+                    `Workers left: ${workersLeft} / ${totalWorkers}` +
+                        (failed > 0
+                            ? ` \x1b[31m(${failed} failed)\x1b[0m`
+                            : ""),
+                );
+            });
+        if (noThreads) {
+            await workerThread;
+        }
+        workers.push(workerThread);
     }
 
     const workerResults = await Promise.all(workers);
@@ -205,6 +210,12 @@ function showUsage() {
                         "Reset the branches to master or main before running transformation.",
                 },
                 {
+                    identifier: "--no-threads",
+                    description: "Don't run in parallel threads.",
+                    requiredRemarks:
+                        "Required if --pull-remotes is used without --nuke-remote.",
+                },
+                {
                     identifier: "--delete-existing-branches",
                     description:
                         "If any branch exist (<branch-name>) then delete them.",
@@ -250,6 +261,7 @@ if (module.id == ".") {
         argsLeftOver,
         "--delete-existing-branches",
     );
+    const noThreads = pullFlag(argsLeftOver, "--no-threads");
     const mainRepoDir = pullValue(argsLeftOver);
 
     if (mainRepoDir == null) {
@@ -293,6 +305,7 @@ if (module.id == ".") {
         resumeFromExistingBranch,
         resetWithMasterOrMainBranches,
         deleteExistingBranches,
+        noThreads,
     });
 } else {
     module.exports.performTransformation = performTransformation;
