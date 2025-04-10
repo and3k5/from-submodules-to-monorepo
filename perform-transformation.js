@@ -27,8 +27,8 @@ const { runExec } = require("./utils/process/run-exec");
  * @param {string} mainRepoDir
  * @param {object} options
  * @param {string} options.migrationBranchName Branch name to create for the migration
- * @param {string?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
- * @param {string?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
+ * @param {boolean?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
+ * @param {boolean?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
  */
 async function performTransformation(
     mainRepoDir,
