@@ -21,6 +21,9 @@ const {
 } = require("./utils/path/ensure-same-case-for-path");
 const { checkoutBranches } = require("./transformation/checkout-branches");
 const { runExec } = require("./utils/process/run-exec");
+const {
+    prettyFormatCommandUsage,
+} = require("./utils/args/pretty-format-command-usage");
 
 /**
  *
@@ -29,6 +32,7 @@ const { runExec } = require("./utils/process/run-exec");
  * @param {string} options.migrationBranchName Branch name to create for the migration
  * @param {boolean?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
  * @param {boolean?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
+ * @param {boolean?} options.deleteExistingBranches Delete existing branches
  */
 async function performTransformation(
     mainRepoDir,
@@ -184,15 +188,52 @@ function getCommandLine() {
     return `${nodeName} ${relPath}`;
 }
 
+const defaultMigrationBranchName = "from-submodules-to-monorepo";
+
 function showUsage() {
-    console.log("Usage:");
     console.log(
-        `${getCommandLine()} <repo-dir> <branch-name> --acknowledge-risks-and-continue`,
+        prettyFormatCommandUsage(getCommandLine(), {
+            options: [
+                {
+                    identifier: "--acknowledge-risks-and-continue",
+                    description: "Acknowledge the risks",
+                    required: true,
+                },
+                {
+                    identifier: "--reset-with-master-or-main-branches",
+                    description:
+                        "Reset the branches to master or main before running transformation.",
+                },
+                {
+                    identifier: "--delete-existing-branches",
+                    description:
+                        "If any branch exist (<branch-name>) then delete them.",
+                    defaultValue: defaultMigrationBranchName,
+                },
+            ],
+            values: [
+                {
+                    identifier: "repo-dir",
+                    description: "Path to the main repo directory.",
+                    required: true,
+                },
+                {
+                    identifier: "branch-name",
+                    description:
+                        "Name of the branch to create for the migration.",
+                    defaultValue: defaultMigrationBranchName,
+                },
+            ],
+        }),
     );
 }
 
 if (module.id == ".") {
     const argsLeftOver = process.argv.slice(2);
+    if (pullFlag(argsLeftOver, "--help")) {
+        showUsage();
+        return;
+    }
     const acknowledged = pullFlag(
         argsLeftOver,
         "--acknowledge-risks-and-continue",
@@ -226,7 +267,7 @@ if (module.id == ".") {
     let migrationBranchName = pullValue(argsLeftOver);
 
     if (migrationBranchName == null || migrationBranchName == "") {
-        migrationBranchName = "from-submodules-to-monorepo";
+        migrationBranchName = defaultMigrationBranchName;
     }
 
     if (!existsSync(mainRepoDir)) {

@@ -14,6 +14,9 @@ const {
 } = require("worker_threads");
 const { createConsoleWrapper } = require("../utils/output/console-wrapper");
 const { whileIndexLock } = require("../utils/git/while-index-lock");
+const {
+    prettyFormatCommandUsage,
+} = require("../utils/args/pretty-format-command-usage");
 
 /**
  *
@@ -151,9 +154,33 @@ function getCommandLine() {
 }
 
 function showUsage() {
-    console.log("Usage:");
     console.log(
-        `${getCommandLine()} <repo-dir> <branchname>[,<branchname>...] [--no-submodule-update] --acknowledge-risks-and-continue`,
+        prettyFormatCommandUsage(getCommandLine(), {
+            options: [
+                {
+                    identifier: "--acknowledge-risks-and-continue",
+                    description: "Acknowledge the risks",
+                    required: true,
+                },
+                {
+                    identifier: "--no-submodule-update",
+                    description: "Dont update submodules",
+                },
+            ],
+            values: [
+                {
+                    identifier: "repo-dir",
+                    description: "Path to the main repo directory.",
+                    required: true,
+                },
+                {
+                    identifier: "branchname",
+                    customNotation: "multiple-values-comma-separated",
+                    description:
+                        "Name(s) of the branch to create for the migration.\nIf multiple branches (like main and master), separate by comma and no spaces",
+                },
+            ],
+        }),
     );
 }
 
@@ -173,12 +200,21 @@ if (!isMainThread) {
     }
 } else if (module.id == ".") {
     const argsLeftOver = process.argv.slice(2);
+    if (pullFlag(argsLeftOver, "--help")) {
+        showUsage();
+        return;
+    }
     const acknowledged = pullFlag(
         argsLeftOver,
         "--acknowledge-risks-and-continue",
     );
     const noSubmoduleUpdate = pullFlag(argsLeftOver, "--no-submodule-update");
     const repoDir = pullValue(argsLeftOver);
+    if (argsLeftOver.length == 0) {
+        console.error("Missing args");
+        showUsage();
+        return;
+    }
     const branchNames = pullValue(argsLeftOver).split(",");
 
     if (repoDir == null) {
