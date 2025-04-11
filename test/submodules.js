@@ -8,6 +8,7 @@
  * @property {string} name - The name of the submodule.
  * @property {string[]?} [additionalFiles] - Additional files to include in the submodule.
  * @property {string?} [renameFolder] - Rename the submodule folder to something else
+ * @property {string?} [customReadMeName] - Custom readme filename
  * @property {string[]?} [additionalDirs] - Additional directories to include in the submodule.
  * @property {string[]?} [pullFrom] - Existing submodules to pull from.
  * @property {boolean?} [skipAddAsSubmodule] - Dont add this as a submodule
