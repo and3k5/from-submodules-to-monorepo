@@ -16,12 +16,15 @@ const { platform } = require("node:os");
  * @param {import("../../utils/output/console-wrapper").ConsoleBase} console
  */
 function moveFiles(mainRepoDir, fullPath, submodule, console) {
-    const targetPath = ensureSameCaseForPath(join(fullPath, submodule.path));
+    fullPath = ensureSameCaseForPath(fullPath);
+    const correctCasedSubmodulePath = basename(fullPath);
+    const targetPath = join(fullPath, correctCasedSubmodulePath);
     console.log(
         `   Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
     );
+    const tempKeyword = "_TEMP_DUP";
     const targetPathExists = existsSync(targetPath);
-    const tempNameForExistingPath = `${basename(targetPath)}_TEMP_DUP`;
+    const tempNameForExistingPath = `${basename(ensureSameCaseForPath(targetPath))}${tempKeyword}`;
     if (targetPathExists) {
         renameSync(targetPath, join(fullPath, tempNameForExistingPath));
     }
@@ -36,7 +39,7 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
         .filter((e) => e != "");
 
     for (const entry of entries) {
-        if (sameDirName(entry, submodule.path)) continue;
+        if (sameDirName(entry, correctCasedSubmodulePath)) continue;
         const entryPath = `${fullPath}/${entry}`;
         if (
             platform() == "win32" &&
@@ -47,6 +50,12 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
         ) {
             continue;
         }
+        console.log(
+            "      mv " +
+                relative(mainRepoDir, entryPath) +
+                " " +
+                relative(mainRepoDir, targetPath),
+        );
         run("git", ["mv", entryPath, targetPath], {
             cwd: fullPath,
         });
@@ -55,7 +64,13 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
     if (targetPathExists) {
         renameSync(
             join(fullPath, tempNameForExistingPath),
-            ensureSameCaseForPath(join(targetPath, submodule.path)),
+            join(
+                targetPath,
+                tempNameForExistingPath.substring(
+                    0,
+                    tempNameForExistingPath.length - tempKeyword.length,
+                ),
+            ),
         );
     }
 

@@ -6,7 +6,6 @@ const { submodules } = require("./submodules");
 const { words } = require("./lorem");
 const { run } = require("../utils/process/run");
 const { createFile } = require("./utils/fs/create-file");
-const { addSubmodule } = require("./utils/git/add-submodule");
 const { cloneRepo } = require("./utils/git/clone-repo");
 const { gitAdd } = require("./utils/git/git-add");
 const { gitPush } = require("./utils/git/git-push");
@@ -16,6 +15,8 @@ const {
 } = require("./utils/string/capitalize-first-letter");
 const { cleanWithRetries } = require("./utils/fs/clean-with-retries");
 const { remotePath } = require("./utils/git/remote-path");
+const { gitRemoteBase } = require("./globals");
+const { platform } = require("os");
 
 const devDir = resolve(__dirname, "dev");
 const mySystemDir = resolve(devDir, "my-system");
@@ -75,10 +76,70 @@ async function createSubModules() {
     for (const submodule of submodules) {
         if (submodule.skipAddAsSubmodule === true) continue;
         console.log("   - " + submodule.name);
-        addSubmodule(submodule.name, mySystemDir);
 
-        gitAdd(submodule.name, mySystemDir);
-        gitCommit("Added submodule: " + submodule.name, mySystemDir);
+        const remotePath = gitRemoteBase + "/" + submodule.name + ".git";
+        run(
+            "git",
+            [
+                "submodule",
+                "add",
+                ...(submodule.renameFolder != null
+                    ? ["--name", submodule.renameFolder]
+                    : []),
+                remotePath,
+            ],
+            {
+                cwd: mySystemDir,
+                encoding: "utf-8",
+            },
+        );
+
+        if (submodule.renameFolder != null) {
+            if (
+                platform() == "win32" &&
+                submodule.renameFolder.toUpperCase() ==
+                    submodule.name.toUpperCase()
+            ) {
+                // windows borks if we try to rename the folder to the same name but with same casing
+                run(
+                    "git",
+                    ["mv", submodule.name, submodule.renameFolder + "-temp"],
+                    {
+                        cwd: mySystemDir,
+                    },
+                );
+                run(
+                    "git",
+                    [
+                        "mv",
+                        submodule.renameFolder + "-temp",
+                        submodule.renameFolder,
+                    ],
+                    {
+                        cwd: mySystemDir,
+                    },
+                );
+            } else {
+                run("git", ["mv", submodule.name, submodule.renameFolder], {
+                    cwd: mySystemDir,
+                });
+            }
+        }
+
+        gitAdd(
+            submodule.renameFolder != null
+                ? submodule.renameFolder
+                : submodule.name,
+            mySystemDir,
+        );
+        gitCommit(
+            "Added submodule: " +
+                submodule.name +
+                (submodule.renameFolder != null
+                    ? "as folder " + submodule.renameFolder
+                    : ""),
+            mySystemDir,
+        );
     }
 
     console.log("  generate some random file history");
@@ -92,7 +153,12 @@ async function createSubModules() {
                      */
                     const logs = [];
                     logs.push("  - " + submodule.name);
-                    const actualDir = resolve(mySystemDir, submodule.name);
+                    const actualDir = resolve(
+                        mySystemDir,
+                        submodule.renameFolder != null
+                            ? submodule.renameFolder
+                            : submodule.name,
+                    );
                     run("git", ["config", "user.name", "example user"], {
                         cwd: actualDir,
                     });
@@ -202,7 +268,12 @@ async function createSubModules() {
     for (const submodule of submodules) {
         if (submodule.skipAddAsSubmodule === true) continue;
         console.log("   - " + submodule.name);
-        gitAdd(submodule.name, mySystemDir);
+        gitAdd(
+            submodule.renameFolder != null
+                ? submodule.renameFolder
+                : submodule.name,
+            mySystemDir,
+        );
     }
 
     console.log("  commit my-system");

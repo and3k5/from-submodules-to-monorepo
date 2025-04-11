@@ -7,6 +7,7 @@
  * @typedef {Object} Submodule
  * @property {string} name - The name of the submodule.
  * @property {string[]?} [additionalFiles] - Additional files to include in the submodule.
+ * @property {string?} [renameFolder] - Rename the submodule folder to something else
  * @property {string[]?} [additionalDirs] - Additional directories to include in the submodule.
  * @property {string[]?} [pullFrom] - Existing submodules to pull from.
  * @property {boolean?} [skipAddAsSubmodule] - Dont add this as a submodule
@@ -23,8 +24,12 @@ module.exports.submodules = [
         customReadMeName: "README-commons.md",
         skipAddAsSubmodule: true,
     },
-    { name: "documentation", additionalFiles: ["documentation"] },
     { name: "webserver", additionalDirs: ["webserver"], pullFrom: ["commons"] },
+    {
+        name: "Documentation",
+        additionalFiles: ["Documentation"],
+        renameFolder: "documentation",
+    },
     {
         name: "commandline",
         additionalFiles: ["commandline"],
@@ -44,5 +49,11 @@ module.exports.submodules = [
         name: "worker",
         pullFrom: ["commons"],
         modifiers: [{ file: "README-commons.md", content: "Foobar2" }],
+    },
+    {
+        name: "data-and-stuff",
+        pullFrom: ["commons"],
+        additionalFiles: ["DEMO.md"],
+        renameFolder: "data",
     },
 ];
