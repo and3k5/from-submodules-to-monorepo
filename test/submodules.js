@@ -31,9 +31,10 @@ module.exports.submodules = [
         renameFolder: "documentation",
     },
     {
-        name: "commandline",
+        name: "Commandline",
         additionalFiles: ["commandline"],
         pullFrom: ["commons"],
+        renameFolder: "commandline",
     },
     {
         name: "service",
