@@ -25,7 +25,12 @@ module.exports.submodules = [
         customReadMeName: "README-commons.md",
         skipAddAsSubmodule: true,
     },
-    { name: "webserver", additionalDirs: ["webserver"], pullFrom: ["commons"] },
+    {
+        name: "Webserver",
+        additionalDirs: ["Webserver"],
+        pullFrom: ["commons"],
+        renameFolder: "webserver",
+    },
     {
         name: "Documentation",
         additionalFiles: ["Documentation"],

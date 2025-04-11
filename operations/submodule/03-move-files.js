@@ -26,7 +26,13 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
     const targetPathExists = existsSync(targetPath);
     const tempNameForExistingPath = `${basename(ensureSameCaseForPath(targetPath))}${tempKeyword}`;
     if (targetPathExists) {
-        renameSync(targetPath, join(fullPath, tempNameForExistingPath));
+        run(
+            "git",
+            ["mv", relative(fullPath, ensureSameCaseForPath(targetPath)), relative(fullPath, join(fullPath, tempNameForExistingPath))],
+            {
+                cwd: fullPath,
+            },
+        );
     }
 
     mkdirSync(targetPath, { recursive: true });
