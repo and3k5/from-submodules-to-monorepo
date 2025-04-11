@@ -41,7 +41,7 @@ const os = require("os");
                 { encoding: "utf-8" },
             );
             const afterTree = readFileSync(
-                resolve(mainRepoDir, "..", "tree-before.txt"),
+                resolve(mainRepoDir, "..", "tree-after.txt"),
                 { encoding: "utf-8" },
             );
             const equal = beforeTree == afterTree;
