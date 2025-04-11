@@ -179,6 +179,8 @@ async function createSubModules() {
                                 fileName,
                                 words(150 + Math.round(Math.random() * 100)),
                             );
+                            gitAdd(fileName, actualDir);
+                            gitCommit("Add extra file: " + fileName, actualDir);
                         }
                     }
                     if (
