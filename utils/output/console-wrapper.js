@@ -3,9 +3,12 @@
  */
 
 /**
- * @typedef {Object} ConsoleWrapper
- * @extends {ConsoleBase}
+ * @typedef {Object} ConsoleWrapperPart
  * @property {string[]} contents
+ */
+
+/**
+ * @typedef {ConsoleWrapperPart & ConsoleBase} ConsoleWrapper
  */
 
 /**

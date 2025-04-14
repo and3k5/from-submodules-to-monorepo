@@ -3,7 +3,7 @@ const { spawn } = require("child_process");
 /**
  *
  * @param  {Parameters<typeof spawn>} args
- * @returns {string}
+ * @returns {Promise<string>}
  */
 function getRunOutput(...args) {
     return new Promise((resolve, reject) => {
