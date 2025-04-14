@@ -8,7 +8,7 @@ The purpose is to keep the commit history "intact" while consolidating everythin
 
 Imagine this is the current project:
 
-```
+```text
 MySuperProject/README.md       [file]
 MySuperProject/WebApplication1 [submodule]
 MySuperProject/ClassProject1   [submodule]
@@ -17,7 +17,7 @@ MySuperProject/ClassProject2   [folder]
 
 The expected result would be:
 
-```
+```text
 MySuperProject/README.md       [file]
 MySuperProject/WebApplication1 [folder]
 MySuperProject/ClassProject1   [folder]
@@ -36,7 +36,7 @@ Every submodule will be moved into a nested folder to be merged with the main re
 
 The entire process is automated by running:
 
-```
+```bash
 node test/index.js
 ```
 
@@ -57,7 +57,7 @@ This script is highly experimental and may cause irreversible damage, including 
 
 ## Command line
 
-```
+```bash
 npx from-submodules-to-monorepo <repo-dir> <branch-name>
 ```
 
