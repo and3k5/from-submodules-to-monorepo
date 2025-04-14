@@ -1,0 +1,6 @@
+/.vscode
+/test/dev
+/test/remote
+/eslint.config.mjs
+typings
+/.github
