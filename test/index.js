@@ -1,21 +1,14 @@
 const { resolve } = require("path");
 const { createSubModules } = require("./create-submodules");
-const { run } = require("../utils/process/run");
 const { performTransformation } = require("../perform-transformation");
 const { createFile } = require("./utils/fs/create-file");
 const { readFileSync } = require("fs");
 const { pullFlag } = require("../utils/args/pull-flag");
-const os = require("os");
+const { getFileTree } = require("../utils/files/file-tree");
 
 (async function () {
     try {
         const mainRepoDir = await createSubModules();
-
-        const treeArgs = os.platform() === "linux" ? [] : ["/f", "/a"];
-        const tree = run("tree", treeArgs, {
-            encoding: "utf-8",
-            cwd: mainRepoDir,
-        }).stdout;
 
         const argsLeftOver = process.argv.slice(2);
         const skipTransformation = pullFlag(
@@ -23,18 +16,24 @@ const os = require("os");
             "--skip-transformation",
         );
 
-        createFile(resolve(mainRepoDir, ".."), "tree-before.txt", tree);
+        createFile(
+            resolve(mainRepoDir, ".."),
+            "tree-before.txt",
+            await getFileTree(mainRepoDir, { excludedFiles: [".gitmodules"] }),
+        );
 
         if (!skipTransformation) {
             await performTransformation(mainRepoDir, {
                 migrationBranchName: "migrate-from-submodules-to-monorepo",
             });
 
-            const tree2 = run("tree", treeArgs, {
-                encoding: "utf-8",
-                cwd: mainRepoDir,
-            }).stdout;
-            createFile(resolve(mainRepoDir, ".."), "tree-after.txt", tree2);
+            createFile(
+                resolve(mainRepoDir, ".."),
+                "tree-after.txt",
+                await getFileTree(mainRepoDir, {
+                    excludedFiles: [".gitmodules"],
+                }),
+            );
 
             const beforeTree = readFileSync(
                 resolve(mainRepoDir, "..", "tree-before.txt"),
