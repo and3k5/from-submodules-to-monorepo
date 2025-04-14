@@ -4,8 +4,6 @@ const { resolve, join, relative, parse } = require("path");
 const { run } = require("./utils/process/run");
 const { readGitmodules } = require("./utils/git/read-gitmodules");
 const { cwd } = require("process");
-const { pullFlag } = require("./utils/args/pull-flag");
-const { pullValue } = require("./utils/args/pull-value");
 const {
     removeSubmodule,
 } = require("./operations/main-repo/01-remove-submodule");
@@ -26,6 +24,10 @@ const {
 } = require("./utils/args/pretty-format-command-usage");
 const { createTreeFile } = require("./transformation/create-tree-file");
 const { mkdir } = require("fs/promises");
+const {
+    createConfig,
+    getCommandValues,
+} = require("./utils/args/command-config");
 
 /**
  *
@@ -292,99 +294,96 @@ function getCommandLine() {
 
 const defaultMigrationBranchName = "from-submodules-to-monorepo";
 
-function showUsage() {
-    console.log(
-        prettyFormatCommandUsage(getCommandLine(), {
-            options: [
-                {
-                    identifier: "--acknowledge-risks-and-continue",
-                    description: "Acknowledge the risks",
-                    required: true,
-                },
-                {
-                    identifier: "--reset-with-master-or-main-branches",
-                    description:
-                        "Reset the branches to master or main before running transformation.",
-                },
-                {
-                    identifier: "--no-threads",
-                    description: "Don't run in parallel threads.",
-                    requiredRemarks:
-                        "Required if --pull-remotes is used without --nuke-remote.",
-                },
-                {
-                    identifier: "--pull-remotes",
-                    description:
-                        "Pull remotes for all submodules and main repo.\nMust be used with either --no-threads or --nuke-remote.",
-                },
-                {
-                    identifier: "--nuke-remote",
-                    description:
-                        "Safety switch to avoid pulling remotes uncontrollably.",
-                    requiredRemarks:
-                        "Required if --pull-remotes is used without --no-threads.",
-                },
-                {
-                    identifier: "--delete-existing-branches",
-                    description:
-                        "If any branch exist (<branch-name>) then delete them.",
-                },
-                {
-                    identifier: "--create-report",
-                    description:
-                        "Create a report with the transformation output and tree files to compare before and after.",
-                },
-                {
-                    identifier: "--create-tree-files",
-                    description:
-                        "Create tree files to compare before and after.\nOverwritten when using --create-report.",
-                },
-            ],
-            values: [
-                {
-                    identifier: "repo-dir",
-                    description: "Path to the main repo directory.",
-                    required: true,
-                },
-                {
-                    identifier: "branch-name",
-                    description:
-                        "Name of the branch to create for the migration.",
-                    defaultValue: defaultMigrationBranchName,
-                },
-            ],
-        }),
-    );
-}
-
 if (module.id == ".") {
-    const argsLeftOver = process.argv.slice(2);
-    if (pullFlag(argsLeftOver, "--help")) {
+    const argsConfig = createConfig({
+        flags: {
+            help: {
+                identifier: "--help",
+                description: "Show this help message.",
+            },
+            acknowledged: {
+                identifier: "--acknowledge-risks-and-continue",
+                description: "Acknowledge the risks",
+                required: true,
+            },
+            resetWithMasterOrMainBranches: {
+                identifier: "--reset-with-master-or-main-branches",
+                description:
+                    "Reset the branches to master or main before running transformation.",
+            },
+            noThreads: {
+                identifier: "--no-threads",
+                description: "Don't run in parallel threads.",
+                requiredRemarks:
+                    "Required if --pull-remotes is used without --nuke-remote.",
+            },
+            pullRemotes: {
+                identifier: "--pull-remotes",
+                description:
+                    "Pull remotes for all submodules and main repo.\nMust be used with either --no-threads or --nuke-remote.",
+            },
+            nukeRemote: {
+                identifier: "--nuke-remote",
+                description:
+                    "Safety switch to avoid pulling remotes uncontrollably.",
+                requiredRemarks:
+                    "Required if --pull-remotes is used without --no-threads.",
+            },
+            deleteExistingBranches: {
+                identifier: "--delete-existing-branches",
+                description:
+                    "If any branch exist (<branch-name>) then delete them.",
+            },
+            createReport: {
+                identifier: "--create-report",
+                description:
+                    "Create a report with the transformation output and tree files to compare before and after.",
+            },
+            createTreeFiles: {
+                identifier: "--create-tree-files",
+                description:
+                    "Create tree files to compare before and after.\nOverwritten when using --create-report.",
+            },
+        },
+        values: {
+            repoDir: {
+                identifier: "repo-dir",
+                description: "Path to the main repo directory.",
+                required: true,
+            },
+            branchName: {
+                identifier: "branch-name",
+                description: "Name of the branch to create for the migration.",
+                defaultValue: defaultMigrationBranchName,
+            },
+        },
+    });
+    function showUsage() {
+        console.log(values);
+        console.log(prettyFormatCommandUsage(getCommandLine(), argsConfig));
+    }
+
+    const argValues = getCommandValues(argsConfig, process.argv.slice(2));
+    if (argValues == null) {
+        console.error("Invalid args");
         showUsage();
         return;
     }
-    const acknowledged = pullFlag(
-        argsLeftOver,
-        "--acknowledge-risks-and-continue",
-    );
-    const resumeFromExistingBranch = pullFlag(
-        argsLeftOver,
-        "--resume-from-existing-branch",
-    );
-    const resetWithMasterOrMainBranches = pullFlag(
-        argsLeftOver,
-        "--reset-with-master-or-main-branches",
-    );
-    const deleteExistingBranches = pullFlag(
-        argsLeftOver,
-        "--delete-existing-branches",
-    );
-    const createReport = pullFlag(argsLeftOver, "--create-report");
-    const createTreeFiles = pullFlag(argsLeftOver, "--create-tree-files");
-    const noThreads = pullFlag(argsLeftOver, "--no-threads");
-    const pullRemotes = pullFlag(argsLeftOver, "--pull-remotes");
-    const nukeRemote = pullFlag(argsLeftOver, "--nuke-remote");
-    const mainRepoDir = pullValue(argsLeftOver);
+    const flags = argValues.flags;
+    const values = argValues.values;
+    if (flags.help) {
+        showUsage();
+        return;
+    }
+    const acknowledged = flags.acknowledged;
+    const resetWithMasterOrMainBranches = flags.resetWithMasterOrMainBranches;
+    const deleteExistingBranches = flags.deleteExistingBranches;
+    const createReport = flags.createReport;
+    const createTreeFiles = flags.createTreeFiles;
+    const noThreads = flags.noThreads;
+    const pullRemotes = flags.pullRemotes;
+    const nukeRemote = flags.nukeRemote;
+    const mainRepoDir = values.repoDir;
 
     if (mainRepoDir == null) {
         console.error("Missing repo dir");
@@ -392,13 +391,7 @@ if (module.id == ".") {
         return;
     }
 
-    if (argsLeftOver.length > 1) {
-        console.error("Invalid args");
-        showUsage();
-        return;
-    }
-
-    let migrationBranchName = pullValue(argsLeftOver);
+    let migrationBranchName = values.branchName;
 
     if (migrationBranchName == null || migrationBranchName == "") {
         migrationBranchName = defaultMigrationBranchName;
@@ -434,7 +427,6 @@ if (module.id == ".") {
         throw new Error("Migration branch name is required");
     performTransformation(mainRepoDir, {
         migrationBranchName,
-        resumeFromExistingBranch,
         resetWithMasterOrMainBranches,
         deleteExistingBranches,
         noThreads,
