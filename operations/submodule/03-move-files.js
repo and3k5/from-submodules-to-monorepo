@@ -28,7 +28,11 @@ function moveFiles(mainRepoDir, fullPath, submodule, console) {
     if (targetPathExists) {
         run(
             "git",
-            ["mv", relative(fullPath, ensureSameCaseForPath(targetPath)), relative(fullPath, join(fullPath, tempNameForExistingPath))],
+            [
+                "mv",
+                relative(fullPath, ensureSameCaseForPath(targetPath)),
+                relative(fullPath, join(fullPath, tempNameForExistingPath)),
+            ],
             {
                 cwd: fullPath,
             },

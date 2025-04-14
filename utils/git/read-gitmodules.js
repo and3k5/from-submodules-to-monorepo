@@ -1,15 +1,9 @@
 const { readFileSync } = require("fs");
 
 /**
- * @typedef {Object} Submodule
- * @property {string?} path - The path of the submodule.
- * @property {string?} url - The URL of the submodule.
- */
-
-/**
  *
  * @param {string} filePath
- * @returns {Submodule[]}
+ * @returns {import("./read-gitmodules").Submodule[]}
  */
 function readGitmodules(filePath) {
     const content = readFileSync(filePath, "utf-8");

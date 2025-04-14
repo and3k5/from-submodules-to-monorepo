@@ -4,6 +4,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
+import jsdoc from "eslint-plugin-jsdoc";
 
 import { includeIgnoreFile } from "@eslint/compat";
 import { fileURLToPath } from "node:url";
@@ -12,8 +13,14 @@ export default defineConfig([
     includeIgnoreFile(fileURLToPath(new URL(".gitignore", import.meta.url))),
     {
         files: ["**/*.{js,mjs,cjs,ts}"],
-        plugins: { js },
-        extends: ["js/recommended"],
+        plugins: { js, jsdoc },
+        extends: ["js/recommended", jsdoc.configs["flat/recommended"]],
+        rules: {
+            "jsdoc/require-jsdoc": "off",
+            "jsdoc/require-returns-description": "off",
+            "jsdoc/require-param-description": "off",
+            "jsdoc/require-property-description": "off",
+        },
     },
     {
         files: ["**/*.js"],

@@ -1,8 +1,7 @@
 /**
  *
  * @param {string[]} args
- * @param {string} key
- * @returns
+ * @returns {string | undefined}
  */
 function pullValue(args) {
     if (args.length === 0) return undefined;

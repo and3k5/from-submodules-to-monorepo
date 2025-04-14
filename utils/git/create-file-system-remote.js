@@ -5,6 +5,7 @@ const { run } = require("../process/run");
 /**
  * @param {string} remoteDir The "current directory" where a new remote will be created
  * @param {string} repoName The name of the repo (without .git)
+ * @returns {string} The path to the remote
  */
 function createFileSystemRemote(remoteDir, repoName) {
     const dirPath = resolve(remoteDir, repoName + ".git");

@@ -31,7 +31,8 @@ function randomFileName() {
 /**
  * @param {string} dir
  * @param {import("./submodules").Submodule} submodule
- * @param {number} [depth=2]
+ * @param {number} depth
+ * @param {number} currentDepth
  */
 function makeRandomHistory(dir, submodule, depth = 2, currentDepth = 0) {
     let l = 1 + Math.round(Math.random() * 2);

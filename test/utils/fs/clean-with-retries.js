@@ -1,9 +1,9 @@
 const { cleanDirSync } = require("./clean-dir");
 
 /**
- *
  * @param {string} dir
  * @param {string[] | undefined} exclude
+ * @param {number} attempts
  */
 function cleanWithRetries(dir, exclude, attempts = 3) {
     try {

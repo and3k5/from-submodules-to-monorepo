@@ -1,4 +1,9 @@
-const { isMainThread, Worker, workerData, parentPort } = require("worker_threads");
+const {
+    isMainThread,
+    Worker,
+    workerData,
+    parentPort,
+} = require("worker_threads");
 const {
     createFileSystemRemote,
 } = require("../utils/git/create-file-system-remote");
@@ -21,7 +26,13 @@ const remoteDir = resolve(__dirname, "remote");
  * @param {string?} customReadMeName
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
  */
-function createRemote(tempDir, moduleName, isSubmodule, customReadMeName, console) {
+function createRemote(
+    tempDir,
+    moduleName,
+    isSubmodule,
+    customReadMeName,
+    console,
+) {
     console.log("   - Module: " + moduleName);
 
     console.log("     tempDir: " + tempDir);

@@ -1,23 +1,5 @@
 /**
- * @typedef {Object} Modifier
- * @property {string} file - The file to modify.
- * @property {string} content - The content to add to the file.
- */
-/**
- * @typedef {Object} Submodule
- * @property {string} name - The name of the submodule.
- * @property {string[]?} [additionalFiles] - Additional files to include in the submodule.
- * @property {string?} [renameFolder] - Rename the submodule folder to something else
- * @property {string?} [customReadMeName] - Custom readme filename
- * @property {string[]?} [additionalDirs] - Additional directories to include in the submodule.
- * @property {string[]?} [pullFrom] - Existing submodules to pull from.
- * @property {boolean?} [skipAddAsSubmodule] - Dont add this as a submodule
- * @property {string[]?} [deletes] - Existing submodules to pull from.
- * @property {Modifier[]?} [modifiers] - Existing submodules to pull from.
- */
-
-/**
- * @type {Submodule[]}
+ * @type {import("./submodules").Submodule[]}
  */
 module.exports.submodules = [
     {

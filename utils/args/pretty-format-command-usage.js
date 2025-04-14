@@ -1,30 +1,6 @@
 /**
- * @typedef {Object} CommandUsageOptionsConfig
- * @property {string} identifier
- * @property {string} description
- * @property {bool?} required
- * @property {string?} requiredRemarks
- * @property {string?} defaultValue
- */
-
-/**
- * @typedef {Object} CommandUsagePullValue
- * @property {string} identifier
- * @property {string} description
- * @property {bool?} required
- * @property {"multiple-values-comma-separated"?} customNotation
- * @property {string?} defaultValue
- */
-
-/**
- * @typedef {Object} CommandUsageConfiguration
- * @property {CommandUsageOptionsConfig[]} options
- * @property {CommandUsagePullValue[]} values
- */
-
-/**
- * @param {string} path
- * @param {CommandUsageConfiguration} configuration
+ * @param {string} fileName
+ * @param {import("./pretty-format-command-usage").CommandUsageConfiguration} configuration
  * @returns {string}
  */
 function prettyFormatCommandUsage(fileName, configuration) {
@@ -39,7 +15,7 @@ function prettyFormatCommandUsage(fileName, configuration) {
         for (const value of configuration.values) {
             if (value.customNotation === "multiple-values-comma-separated") {
                 commandLine += ` <${value.identifier}>[,<${value.identifier}>,...]`;
-            }else{
+            } else {
                 if (value.required === true) {
                     commandLine += ` <${value.identifier}>`;
                 } else {

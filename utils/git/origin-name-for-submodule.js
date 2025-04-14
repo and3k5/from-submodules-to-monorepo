@@ -6,6 +6,7 @@ const { join } = require("path");
  *
  * @param {string} mainRepoDir
  * @param {import('./read-gitmodules').Submodule} submodule
+ * @returns {string}
  */
 function getOriginNameForSubmodule(mainRepoDir, submodule) {
     const actualSubmodulePath = ensureSameCaseForPath(

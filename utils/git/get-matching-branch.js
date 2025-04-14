@@ -4,7 +4,7 @@ const { getBranches } = require("./get-branches");
  *
  * @param {string} path
  * @param {string | string[]} branchNames
- * @returns
+ * @returns {string | undefined}
  */
 function getMatchingBranch(path, branchNames) {
     const allBranches = getBranches(path)

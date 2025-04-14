@@ -25,8 +25,8 @@ const {
  * @param {object} options
  * @param {boolean?} options.pullRemotes
  * @param {boolean?} options.nukeRemote
- * @param {boolean} isSubmodule
  * @param {import("../utils/output/console-wrapper").ConsoleBase} console
+ * @param {boolean} isSubmodule
  */
 async function checkoutBranch(
     path,

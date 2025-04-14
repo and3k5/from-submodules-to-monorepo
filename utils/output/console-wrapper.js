@@ -1,19 +1,6 @@
-/** @typedef {Object} ConsoleBase
- * @property {typeof console.log} log
- */
-
-/**
- * @typedef {Object} ConsoleWrapperPart
- * @property {string[]} contents
- */
-
-/**
- * @typedef {ConsoleWrapperPart & ConsoleBase} ConsoleWrapper
- */
-
 /**
  *
- * @returns {ConsoleWrapper}
+ * @returns {import("./console-wrapper").ConsoleWrapper}
  */
 function createConsoleWrapper() {
     const contents = [];

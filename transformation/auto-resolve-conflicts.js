@@ -9,7 +9,7 @@ const { getRunOutput } = require("../utils/process/get-run-output");
 /**
  *
  * @param {string} repoDirectory
- * @param {boolean} [noCommit=false]
+ * @param {boolean} noCommit
  * @returns {Promise<boolean>}
  */
 async function autoResolveConflicts(repoDirectory, noCommit = false) {
