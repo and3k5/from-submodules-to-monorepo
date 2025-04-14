@@ -1,3 +1,6 @@
 my-system
 tree-before.txt
 tree-after.txt
+tree-before.json
+tree-after.json
+report*/*

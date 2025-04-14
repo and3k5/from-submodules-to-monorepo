@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { existsSync } = require("fs");
+const { existsSync, createWriteStream } = require("fs");
 const { resolve, join, relative, parse } = require("path");
 const { run } = require("./utils/process/run");
 const { readGitmodules } = require("./utils/git/read-gitmodules");
@@ -24,18 +24,14 @@ const { runExec } = require("./utils/process/run-exec");
 const {
     prettyFormatCommandUsage,
 } = require("./utils/args/pretty-format-command-usage");
+const { createTreeFile } = require("./transformation/create-tree-file");
+const { mkdir } = require("fs/promises");
 
 /**
  *
  * @param {string} mainRepoDir
- * @param {object} options
- * @param {string} options.migrationBranchName Branch name to create for the migration
- * @param {boolean?} options.resumeFromExistingBranch Resume in branch that already exists instead of creating new branch
- * @param {boolean?} options.resetWithMasterOrMainBranches Reset branches checkout, cleanup and such
- * @param {boolean?} options.deleteExistingBranches Delete existing branches
- * @param {boolean?} options.noThreads Don't run in parallel threads
- * @param {boolean?} options.pullRemotes Pull remotes for all submodules and main repo
- * @param {boolean?} options.nukeRemote Safety switch to avoid pulling remotes uncontrollably
+ * @param {import("./perform-transformation").PerformTransformationOptions} options
+ * @returns {Promise<import("./perform-transformation").TransformationResult>}
  */
 async function performTransformation(
     mainRepoDir,
@@ -47,6 +43,8 @@ async function performTransformation(
         noThreads,
         pullRemotes,
         nukeRemote,
+        createTreeFiles,
+        createReport,
     },
 ) {
     if (typeof mainRepoDir != "string")
@@ -57,8 +55,75 @@ async function performTransformation(
     if (migrationBranchName == "")
         throw new Error("Must have valid branch name");
 
+    /**
+     * @type {string | null}
+     */
+    let dirForTreeFiles = null;
+
+    /**
+     * @type {string | null}
+     */
+    let dirForReport = null;
+
+    /**
+     * @type {string | null}
+     */
+    let treeBeforePath = null;
+    /**
+     * @type {string | null}
+     */
+    let treeAfterPath = null;
+
+    if (createReport) {
+        dirForReport = resolve(
+            mainRepoDir,
+            "..",
+            "report" + new Date().getTime(),
+        );
+        await mkdir(dirForReport, { recursive: true });
+        dirForTreeFiles = dirForReport;
+        const outputLogPath = join(dirForReport, "output.log");
+        const logStream = createWriteStream(outputLogPath, { flags: "a" });
+
+        const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+        const originalStderrWrite = process.stderr.write.bind(process.stderr);
+        const originalConsoleError = console.error.bind(console);
+
+        process.stdout.write = (chunk, ...args) => {
+            logStream.write(chunk);
+            return originalStdoutWrite(chunk, ...args);
+        };
+
+        process.stderr.write = (chunk, ...args) => {
+            logStream.write(chunk);
+            return originalStderrWrite(chunk, ...args);
+        };
+
+        console.error = (...args) => {
+            const message = args.join(" ") + "\n";
+            logStream.write(message);
+            originalConsoleError(...args);
+        };
+
+        process.on("exit", () => {
+            logStream.end();
+        });
+    } else if (createTreeFiles) {
+        dirForTreeFiles = resolve(mainRepoDir, "..");
+    }
+
     console.log("Going to transform directory:");
     console.log(`   ${mainRepoDir}`);
+    if (dirForTreeFiles != null) {
+        console.log(
+            "Creating tree file before transformation to " + dirForTreeFiles,
+        );
+        treeBeforePath = await createTreeFile(
+            mainRepoDir,
+            "tree-before.json",
+            dirForTreeFiles,
+        );
+    }
     if (resetWithMasterOrMainBranches) {
         console.log("Resetting repos first");
         const lines = await checkoutBranches(
@@ -187,7 +252,33 @@ async function performTransformation(
         );
     }
 
+    if (dirForTreeFiles != null) {
+        console.log(
+            "Creating tree file after transformation to " + dirForTreeFiles,
+        );
+        treeAfterPath = await createTreeFile(
+            mainRepoDir,
+            "tree-after.json",
+            dirForTreeFiles,
+        );
+    }
+
     console.log("Transformation finished!");
+
+    /**
+     * @type {import("./perform-transformation").TransformationResult}
+     */
+    const result = {
+        success: true,
+    };
+    if (treeBeforePath) {
+        result.treeBeforePath = treeBeforePath;
+    }
+    if (treeAfterPath) {
+        result.treeAfterPath = treeAfterPath;
+    }
+
+    return result;
 }
 
 function getCommandLine() {
@@ -237,7 +328,16 @@ function showUsage() {
                     identifier: "--delete-existing-branches",
                     description:
                         "If any branch exist (<branch-name>) then delete them.",
-                    defaultValue: defaultMigrationBranchName,
+                },
+                {
+                    identifier: "--create-report",
+                    description:
+                        "Create a report with the transformation output and tree files to compare before and after.",
+                },
+                {
+                    identifier: "--create-tree-files",
+                    description:
+                        "Create tree files to compare before and after.\nOverwritten when using --create-report.",
                 },
             ],
             values: [
@@ -279,6 +379,8 @@ if (module.id == ".") {
         argsLeftOver,
         "--delete-existing-branches",
     );
+    const createReport = pullFlag(argsLeftOver, "--create-report");
+    const createTreeFiles = pullFlag(argsLeftOver, "--create-tree-files");
     const noThreads = pullFlag(argsLeftOver, "--no-threads");
     const pullRemotes = pullFlag(argsLeftOver, "--pull-remotes");
     const nukeRemote = pullFlag(argsLeftOver, "--nuke-remote");
@@ -338,6 +440,8 @@ if (module.id == ".") {
         noThreads,
         pullRemotes,
         nukeRemote,
+        createReport,
+        createTreeFiles,
     });
 } else {
     module.exports.performTransformation = performTransformation;

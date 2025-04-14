@@ -1,10 +1,7 @@
-const { resolve } = require("path");
 const { createSubModules } = require("./create-submodules");
 const { performTransformation } = require("../perform-transformation");
-const { createFile } = require("./utils/fs/create-file");
 const { readFileSync } = require("fs");
 const { pullFlag } = require("../utils/args/pull-flag");
-const { getFileTree } = require("../utils/files/file-tree");
 
 (async function () {
     try {
@@ -16,33 +13,20 @@ const { getFileTree } = require("../utils/files/file-tree");
             "--skip-transformation",
         );
 
-        createFile(
-            resolve(mainRepoDir, ".."),
-            "tree-before.txt",
-            await getFileTree(mainRepoDir, { excludedFiles: [".gitmodules"] }),
-        );
-
         if (!skipTransformation) {
-            await performTransformation(mainRepoDir, {
+            const result = await performTransformation(mainRepoDir, {
                 migrationBranchName: "migrate-from-submodules-to-monorepo",
+                createReport: true,
             });
 
-            createFile(
-                resolve(mainRepoDir, ".."),
-                "tree-after.txt",
-                await getFileTree(mainRepoDir, {
-                    excludedFiles: [".gitmodules"],
-                }),
-            );
+            //await createTreeFile(mainRepoDir, "tree-after.json", resolve(mainRepoDir, ".."));
 
-            const beforeTree = readFileSync(
-                resolve(mainRepoDir, "..", "tree-before.txt"),
-                { encoding: "utf-8" },
-            );
-            const afterTree = readFileSync(
-                resolve(mainRepoDir, "..", "tree-after.txt"),
-                { encoding: "utf-8" },
-            );
+            const beforeTree = readFileSync(result.treeBeforePath, {
+                encoding: "utf-8",
+            });
+            const afterTree = readFileSync(result.treeAfterPath, {
+                encoding: "utf-8",
+            });
             const equal = beforeTree == afterTree;
             console.log("Tree remained equal: " + equal);
 
