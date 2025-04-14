@@ -5,6 +5,7 @@ import tseslint from "typescript-eslint";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
 import jsdoc from "eslint-plugin-jsdoc";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 import { includeIgnoreFile } from "@eslint/compat";
 import { fileURLToPath } from "node:url";
@@ -54,4 +55,5 @@ export default defineConfig([
         language: "markdown/gfm",
         extends: ["markdown/recommended"],
     },
+    eslintConfigPrettier,
 ]);
