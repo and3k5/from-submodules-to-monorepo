@@ -8,11 +8,14 @@
     },
     "directories": {},
     "scripts": {
-        "test": "npx webpack --mode development --devtool source-map && node dist/test",
+        "test": "npm run build:dev --devtool source-map && node dist/test",
         "format": "prettier . --write",
         "eslint": "eslint",
         "postversion": "node read-version.js --run-command",
-        "prepack": "npx webpack --mode production"
+        "prepack": "npm run build:prod",
+        "start": "node dist/perform-transformation.js",
+        "build:dev": "npx webpack --mode development",
+        "build:prod": "npx webpack --mode production"
     },
     "keywords": [],
     "author": "",
