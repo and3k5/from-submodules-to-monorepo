@@ -41,6 +41,7 @@ interface CommandUsagePullValue {
 function createConfig<TFlagKey extends string[], TValueKey extends string[]>(
     config: CommandUsageConfig<TFlagKey, TValueKey>,
 ): CommandUsageConfig<TFlagKey, TValueKey>;
+
 function getCommandValues<
     TFlagKey extends string[],
     TValueKey extends string[],
