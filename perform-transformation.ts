@@ -439,7 +439,7 @@ if (module.id == ".") {
         console.log("Use --acknowledge-risks-and-continue and try again");
         process.exit(1);
     }
-    
+
     if (typeof mainRepoDir != "string")
         throw new Error("A repo directory is required");
     if (typeof migrationBranchName != "string")

@@ -9,4 +9,3 @@ export function getRemotePath() {
     }
     return path;
 }
-

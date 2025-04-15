@@ -10,4 +10,3 @@ export function fileExistsWithCaseSync(filepath) {
     }
     return fileExistsWithCaseSync(dir);
 }
-

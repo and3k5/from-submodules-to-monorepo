@@ -1,5 +1,5 @@
-export function createConsoleWrapper() : ConsoleWrapper {
-    const contents : ConsoleWrapper["contents"] = [];
+export function createConsoleWrapper(): ConsoleWrapper {
+    const contents: ConsoleWrapper["contents"] = [];
     return {
         log: (...args) => {
             contents.push(args.join(" "));

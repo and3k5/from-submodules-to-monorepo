@@ -1,7 +1,5 @@
 import { getMatchingBranch } from "../../utils/git/get-matching-branch";
-import {
-    ConsoleBase,
-} from "../../utils/output/console-wrapper";
+import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { whileIndexLock } from "../../utils/git/while-index-lock";
 import { execFileSync } from "child_process";
 

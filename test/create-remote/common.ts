@@ -5,9 +5,7 @@ import { cloneRepo } from "../utils/git/clone-repo";
 import { gitAdd } from "../utils/git/git-add";
 import { gitCommit } from "../utils/git/git-commit";
 import { gitPush } from "../utils/git/git-push";
-import {
-    ConsoleBase,
-} from "../../utils/output/console-wrapper";
+import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { resolve } from "path";
 import { testOutDir } from "../globals";
 
@@ -20,10 +18,12 @@ export function createRemote(
     customReadMeName: string | undefined | null,
     console: ConsoleBase,
 ) {
-    if (moduleName === null) throw new Error("moduleName should not be null")
-    if (moduleName === undefined) throw new Error("moduleName should not be undefined")
-    if (tempDir === null) throw new Error("tempDir should not be null")
-    if (tempDir === undefined) throw new Error("tempDir should not be undefined")
+    if (moduleName === null) throw new Error("moduleName should not be null");
+    if (moduleName === undefined)
+        throw new Error("moduleName should not be undefined");
+    if (tempDir === null) throw new Error("tempDir should not be null");
+    if (tempDir === undefined)
+        throw new Error("tempDir should not be undefined");
     console.log("   - Module: " + moduleName);
 
     console.log("     tempDir: " + tempDir);

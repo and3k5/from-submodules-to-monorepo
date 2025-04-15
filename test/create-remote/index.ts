@@ -1,5 +1,5 @@
 import { Worker } from "worker_threads";
-import { URL as NodeURL} from "url";
+import { URL as NodeURL } from "url";
 import { createRemote } from "./common";
 
 export const createRemoteThread: (
@@ -15,21 +15,25 @@ export const createRemoteThread: (
     isSubmodule,
     customReadMeName,
 ) {
-    if (moduleName === null) throw new Error("moduleName should not be null")
-    if (moduleName === undefined) throw new Error("moduleName should not be undefined")
-    if (tempDir === null) throw new Error("tempDir should not be null")
-    if (tempDir === undefined) throw new Error("tempDir should not be undefined")
+    if (moduleName === null) throw new Error("moduleName should not be null");
+    if (moduleName === undefined)
+        throw new Error("moduleName should not be undefined");
+    if (tempDir === null) throw new Error("tempDir should not be null");
+    if (tempDir === undefined)
+        throw new Error("tempDir should not be undefined");
     return new Promise((resolve, reject) => {
         const worker = new Worker(
             /* webpackChunkName: "test_worker-create-remote" */
-            new URL("./thread-worker.ts", import.meta.url) as NodeURL, {
-            workerData: {
-                tempDir,
-                moduleName,
-                isSubmodule,
-                customReadMeName,
+            new URL("./thread-worker.ts", import.meta.url) as NodeURL,
+            {
+                workerData: {
+                    tempDir,
+                    moduleName,
+                    isSubmodule,
+                    customReadMeName,
+                },
             },
-        });
+        );
 
         worker.on("message", resolve);
         worker.on("error", (reason) => {
@@ -42,5 +46,3 @@ export const createRemoteThread: (
         });
     });
 };
-
-

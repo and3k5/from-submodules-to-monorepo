@@ -9,11 +9,11 @@ import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 
 export async function pullSubmoduleToMainRepo(
-    mainRepoDir : string,
-    submodule : Submodule,
-    migrationBranchName : string,
-    console : ConsoleBase,
-) : Promise<void> {
+    mainRepoDir: string,
+    submodule: Submodule,
+    migrationBranchName: string,
+    console: ConsoleBase,
+): Promise<void> {
     console.log("   Pulling submodule into main repo");
 
     const localRemotePath = createFileSystemRemote(

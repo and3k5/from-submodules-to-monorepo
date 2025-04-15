@@ -5,7 +5,11 @@ import { basename, join } from "path";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 
-export async function removeSubmodule(mainRepoDir : string, submodule : Submodule, console : ConsoleBase) {
+export async function removeSubmodule(
+    mainRepoDir: string,
+    submodule: Submodule,
+    console: ConsoleBase,
+) {
     if (submodule.path == null) throw new Error("missing path for submodule");
     console.log("   Removing submodule from main repo");
 
@@ -23,7 +27,11 @@ export async function removeSubmodule(mainRepoDir : string, submodule : Submodul
 
     console.log("   Committing submodule removal");
 
-    execFileSync("git", ["commit", "-m", `Remove submodule: ${submodule.path}`], {
-        cwd: mainRepoDir,
-    });
+    execFileSync(
+        "git",
+        ["commit", "-m", `Remove submodule: ${submodule.path}`],
+        {
+            cwd: mainRepoDir,
+        },
+    );
 }

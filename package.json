@@ -6,9 +6,7 @@
     "bin": {
         "from-submodules-to-monorepo": "./dist/perform-transformation.js"
     },
-    "directories": {
-
-    },
+    "directories": {},
     "scripts": {
         "test": "npx webpack --mode development --devtool source-map && node dist/test",
         "format": "prettier . --write",

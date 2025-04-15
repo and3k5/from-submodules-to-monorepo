@@ -4,4 +4,5 @@ import { cwd } from "process";
 
 export const testOutDir = resolve(cwd(), "test-env-data");
 
-export const gitRemoteBase = fileSystemRemotePrefix + resolve(testOutDir, "remote");
+export const gitRemoteBase =
+    fileSystemRemotePrefix + resolve(testOutDir, "remote");

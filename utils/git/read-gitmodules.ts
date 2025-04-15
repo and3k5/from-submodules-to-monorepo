@@ -7,11 +7,11 @@ export interface Submodule {
     url?: string;
 }
 
-export function readGitmodules(filePath : string) : Submodule[] {
+export function readGitmodules(filePath: string): Submodule[] {
     const content = readFileSync(filePath, "utf-8");
-    const submodules : Submodule[] = [];
+    const submodules: Submodule[] = [];
     const lines = content.split("\n");
-    let currentSubmodule : Partial<Submodule> | null = null;
+    let currentSubmodule: Partial<Submodule> | null = null;
 
     lines.forEach((line) => {
         line = line.trim();

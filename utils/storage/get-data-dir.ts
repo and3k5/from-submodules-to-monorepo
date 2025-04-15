@@ -9,4 +9,3 @@ export function getDataDir() {
     }
     return path;
 }
-
