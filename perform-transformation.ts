@@ -377,7 +377,6 @@ if (require.main?.id === module.id) {
         },
     });
     const showUsage = function () {
-        console.log(values);
         console.log(prettyFormatCommandUsage(getCommandLine(), argsConfig));
     };
 
