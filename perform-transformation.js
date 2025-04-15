@@ -76,6 +76,27 @@ async function performTransformation(
      */
     let treeAfterPath = null;
 
+    process.on("exit", () => {
+        const totalMilliseconds = performance.now();
+        const seconds = Math.floor(totalMilliseconds / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        const readableTime = [
+            hours > 0 ? `${hours} hour${hours > 1 ? "s" : ""}` : null,
+            minutes % 60 > 0
+                ? `${minutes % 60} minute${minutes % 60 > 1 ? "s" : ""}`
+                : null,
+            seconds % 60 > 0
+                ? `${seconds % 60} second${seconds % 60 > 1 ? "s" : ""}`
+                : null,
+        ]
+            .filter(Boolean)
+            .join(" and ");
+
+        console.log("Total time elapsed: " + readableTime);
+    });
+
     if (createReport) {
         dirForReport = resolve(
             mainRepoDir,
