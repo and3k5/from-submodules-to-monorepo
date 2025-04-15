@@ -1,6 +1,6 @@
 const { platform } = require("os");
 const { getRunOutput } = require("../process/get-run-output");
-const { normalize } = require("path");
+const { normalize, basename } = require("path");
 
 function alignPathLayout(p) {
     return normalize(p).replaceAll("\\", "/").toUpperCase();
@@ -54,7 +54,7 @@ async function createHiddenDetector(basePath) {
         };
     }
 
-    return (path) => path.basename(path)[0] === ".";
+    return (path) => basename(path)[0] === ".";
 }
 
 module.exports.createHiddenDetector = createHiddenDetector;
