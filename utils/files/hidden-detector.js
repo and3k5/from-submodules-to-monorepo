@@ -22,12 +22,18 @@ async function createHiddenDetector(basePath) {
                 cwd: basePath,
                 encoding: "utf-8",
             })
-        ).split("\n");
+        )
+            .split("\n")
+            .filter((x) => x.trim() !== "");
         content.push(
-            await getRunOutput("attrib", ["/S", "/D", "."], {
-                cwd: basePath,
-                encoding: "utf-8",
-            }),
+            ...(
+                await getRunOutput("attrib", ["/S", "/D", "."], {
+                    cwd: basePath,
+                    encoding: "utf-8",
+                })
+            )
+                .split("\n")
+                .filter((x) => x.trim() !== ""),
         );
         const attributes = content.map((line) => {
             return {
