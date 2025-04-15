@@ -1,6 +1,6 @@
 {
     "name": "from-submodules-to-monorepo",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Utility to transform a big project with many submodules into a single monorepo",
     "main": "./dist/perform-transformation.js",
     "bin": {
