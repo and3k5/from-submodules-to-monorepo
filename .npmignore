@@ -7,3 +7,11 @@ typings
 *.tgz
 /read-version.js
 /.github
+/test-env-data
+/operations
+/utils
+/transformation
+/webpack.config.ts
+/dist/test.js
+/dist/test_*.js
+/perform-transformation.ts

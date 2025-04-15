@@ -1,3 +1,5 @@
 typings
 node_modules
 *.tgz
+dist
+test-env-data

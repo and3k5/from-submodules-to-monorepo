@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "module": "es2020",
+        "lib": [
+            "es2021"
+        ],
+        "moduleResolution": "node",
+        "target": "es5",
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "allowArbitraryExtensions": true
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*"
+    ],
+    "ts-node": {
+        "compilerOptions": {
+            "module": "CommonJS"
+        }
+    }
+}
