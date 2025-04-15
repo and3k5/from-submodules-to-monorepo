@@ -15,3 +15,5 @@ typings
 /dist/test.js
 /dist/test_*.js
 /perform-transformation.ts
+.prettierignore
+/tsconfig.json
