@@ -183,7 +183,7 @@ const argsConfig = createConfig({
 
 if (!isMainThread) {
     throw new Error("Should not be used in worker thread");
-} else if (module.id == ".") {
+} else if (require.main?.id === module.id) {
     const showUsage = function () {
         console.log(prettyFormatCommandUsage(getCommandLine(), argsConfig));
     };

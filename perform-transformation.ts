@@ -312,8 +312,7 @@ function getCommandLine() {
 }
 
 const defaultMigrationBranchName = "from-submodules-to-monorepo";
-
-if (module.id == ".") {
+if (require.main?.id === module.id) {
     const argsConfig = createConfig({
         flags: {
             help: {

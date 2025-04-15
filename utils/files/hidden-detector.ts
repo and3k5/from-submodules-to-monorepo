@@ -67,7 +67,7 @@ export async function createHiddenDetector(
     return (path) => basename(path)[0] === ".";
 }
 
-if (module.id === ".") {
+if (require.main?.id === module.id) {
     const argsConfig = createConfig({
         flags: {
             outputAllEntries: {

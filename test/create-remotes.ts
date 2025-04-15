@@ -53,6 +53,6 @@ export async function createRemotes() {
     });
 }
 
-if (module.id == ".") {
+if (require.main?.id === module.id) {
     createRemotes();
 }

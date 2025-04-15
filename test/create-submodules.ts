@@ -289,6 +289,6 @@ export async function createSubModules() {
     return mySystemDir;
 }
 
-if (module.id == ".") {
+if (require.main?.id === module.id) {
     createSubModules();
 }

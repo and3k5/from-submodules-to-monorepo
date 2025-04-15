@@ -76,6 +76,6 @@ export async function getFileTree(
     return await renderFileTree(fileTree);
 }
 
-if (module.id === ".") {
+if (require.main?.id === module.id) {
     getFileTree(process.argv[2]).then((x) => console.log(x));
 }
