@@ -1,4 +1,6 @@
-var version = "v" + require("./package.json").version;
+const { getVersion } = require("./get-version");
+
+var version = "v" + getVersion();
 const command =
     "git tag -f -a " + version + ' -m "Tag version ' + version + '"';
 if (process.argv.findIndex((x) => x.toLowerCase() === "--run-command")) {

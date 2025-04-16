@@ -319,6 +319,10 @@ if (require.main?.id === module.id) {
                 identifier: "--help",
                 description: "Show this help message.",
             },
+            version: {
+                identifier: "--version",
+                description: "Show the version of this package.",
+            },
             acknowledged: {
                 identifier: "--acknowledge-risks-and-continue",
                 description: "Acknowledge the risks",
@@ -390,6 +394,10 @@ if (require.main?.id === module.id) {
     const values = argValues.values;
     if (flags.help) {
         showUsage();
+        process.exit(0);
+    }
+    if (flags.version) {
+        console.log("from-submodules-to-monorepo version: " + __VERSION__);
         process.exit(0);
     }
     const acknowledged = flags.acknowledged;

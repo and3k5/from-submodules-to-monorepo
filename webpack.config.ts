@@ -1,5 +1,6 @@
 import path from "path";
 import webpack from "webpack";
+import { getVersion } from "./get-version";
 // in case you run into any typescript error when configuring `devServer`
 //import "webpack-dev-server";
 
@@ -32,6 +33,9 @@ const config: webpack.Configuration = {
     },
     plugins: [
         new webpack.BannerPlugin({ banner: "#!/usr/bin/env node", raw: true }),
+        new webpack.DefinePlugin({
+            __VERSION__: JSON.stringify(getVersion()),
+        }),
     ],
     resolve: {
         extensions: [".ts", ".js"],
