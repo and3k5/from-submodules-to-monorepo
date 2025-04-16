@@ -8,7 +8,7 @@
     },
     "directories": {},
     "scripts": {
-        "test": "npm run build:dev --devtool source-map && node dist/test",
+        "test": "npm run build:dev -- --devtool source-map && node dist/test",
         "format": "prettier . --write",
         "eslint": "eslint",
         "postversion": "node read-version.js --run-command",
