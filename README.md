@@ -60,7 +60,50 @@ This script is highly experimental and may cause irreversible damage, including 
 <div id="command-line-usage-begin"></div>
 
 ```text
-npx from-submodules-to-monorepo <repo-dir> <branch-name>
+Usage:
+npx from-submodules-to-monorepo <OPTIONS> <repo-dir> [<branch-name>]
+    Values:
+        repo-dir
+            Path to the main repo directory.
+            Required.
+        branch-name
+            Name of the branch to create for the migration.
+            Optional.
+            Default: from-submodules-to-monorepo
+    Options:
+        --help
+            Show this help message.
+            Optional.
+        --version
+            Show the version of this package.
+            Optional.
+        --acknowledge-risks-and-continue
+            Acknowledge the risks
+            Required.
+        --reset-with-master-or-main-branches
+            Reset the branches to master or main before running transformation.
+            Optional.
+        --no-threads
+            Don't run in parallel threads.
+            Optional. Required if --pull-remotes is used without --nuke-remote.
+        --pull-remotes
+            Pull remotes for all submodules and main repo.
+            Must be used with either --no-threads or --nuke-remote.
+            Optional.
+        --nuke-remote
+            Safety switch to avoid pulling remotes uncontrollably.
+            Optional. Required if --pull-remotes is used without --no-threads.
+        --delete-existing-branches
+            If any branch exist (<branch-name>) then delete them.
+            Optional.
+        --create-report
+            Create a report with the transformation output and tree files to compare before and after.
+            Optional.
+        --create-tree-files
+            Create tree files to compare before and after.
+            Overwritten when using --create-report.
+            Optional.
+
 ```
 
 <div id="command-line-usage-end"></div>
