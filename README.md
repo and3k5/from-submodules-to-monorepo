@@ -57,9 +57,13 @@ This script is highly experimental and may cause irreversible damage, including 
 
 ## Command line
 
-```bash
+<div id="command-line-usage-begin"></div>
+
+```text
 npx from-submodules-to-monorepo <repo-dir> <branch-name>
 ```
+
+<div id="command-line-usage-end"></div>
 
 You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible damage.
 

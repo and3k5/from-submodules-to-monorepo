@@ -15,7 +15,9 @@
         "prepack": "npm run build:prod",
         "start": "node dist/perform-transformation.js",
         "build:dev": "npx webpack --mode development",
-        "build:prod": "npx webpack --mode production"
+        "build:prod": "npx webpack --mode production",
+        "routines:update-docs": "npm run routines:update-docs:cmd-line-usage",
+        "routines:update-docs:cmd-line-usage": "node routines/documentation/update-readme-command-line-usage.js"
     },
     "keywords": [],
     "author": "",
