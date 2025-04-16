@@ -17,3 +17,6 @@ typings
 /perform-transformation.ts
 .prettierignore
 /tsconfig.json
+/get-version.d.ts
+/get-version.js
+/globals.ts
