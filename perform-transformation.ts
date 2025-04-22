@@ -319,6 +319,10 @@ if (require.main?.id === module.id) {
                 identifier: "--help",
                 description: "Show this help message.",
             },
+            enableColors: {
+                identifier: "--enable-colors",
+                description: "Enable colors in the output.",
+            },
             version: {
                 identifier: "--version",
                 description: "Show the version of this package.",
@@ -380,20 +384,26 @@ if (require.main?.id === module.id) {
             },
         },
     });
-    const showUsage = function () {
-        console.log(prettyFormatCommandUsage(getCommandLine(), argsConfig));
+    const showUsage = function (enableColors: boolean) {
+        console.log(
+            prettyFormatCommandUsage(
+                getCommandLine(),
+                argsConfig,
+                enableColors,
+            ),
+        );
     };
 
     const argValues = getCommandValues(argsConfig, process.argv.slice(2));
     if (argValues == null) {
         console.error("Invalid args");
-        showUsage();
+        showUsage(false);
         process.exit(1);
     }
     const flags = argValues.flags;
     const values = argValues.values;
     if (flags.help) {
-        showUsage();
+        showUsage(flags.enableColors ?? false);
         process.exit(0);
     }
     if (flags.version) {
@@ -412,7 +422,7 @@ if (require.main?.id === module.id) {
 
     if (mainRepoDir == null) {
         console.error("Missing repo dir");
-        showUsage();
+        showUsage(flags.enableColors ?? false);
         process.exit(1);
     }
 
@@ -431,7 +441,7 @@ if (require.main?.id === module.id) {
             console.error(
                 "--pull-remotes requires --no-threads or --nuke-remote",
             );
-            showUsage();
+            showUsage(flags.enableColors ?? false);
             process.exit(1);
         }
     }
