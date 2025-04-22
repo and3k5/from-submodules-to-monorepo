@@ -1,2 +1,18 @@
 {
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "package.json": "package-lock.json, .prettierrc",
+        "webpack.config.ts": "tsconfig.json, eslint.config.mjs",
+        ".gitignore": ".npmignore, .prettierignore",
+        "README.md": "LICENSE"
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/typings": true
+    },
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/typings": true,
+        "test-env-data": true
+    }
 }

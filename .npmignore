@@ -1,22 +1,27 @@
+# IDE and stuff
+/.github
 /.vscode
-/test
+.prettierignore
 /.prettierrc
 /eslint.config.mjs
 /jsconfig.json
-typings
-*.tgz
-/read-version.js
-/.github
-/test-env-data
-/operations
-/utils
-/transformation
+/tsconfig.json
 /webpack.config.ts
+
+# Source files
+/operations
+/routines
+/test
+/transformation
+/utils
+/perform-transformation.ts
+/globals.ts
+
+# Test files
 /dist/test.js
 /dist/test_*.js
-/perform-transformation.ts
-.prettierignore
-/tsconfig.json
-/get-version.d.ts
-/get-version.js
-/globals.ts
+
+# Generated files/folders
+/test-env-data
+typings
+*.tgz

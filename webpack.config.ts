@@ -1,6 +1,6 @@
 import path from "path";
 import webpack from "webpack";
-import { getVersion } from "./get-version";
+import { getVersion } from "./utils/version/get-version";
 // in case you run into any typescript error when configuring `devServer`
 //import "webpack-dev-server";
 
@@ -38,7 +38,7 @@ const config: webpack.Configuration = {
         }),
     ],
     resolve: {
-        extensions: [".ts", ".js"],
+        extensions: [".ts", ".js", ".mjs"],
     },
 };
 
