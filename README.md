@@ -59,52 +59,55 @@ This script is highly experimental and may cause irreversible damage, including 
 
 <div id="command-line-usage-begin"></div>
 
-```text
-Usage:
-npx from-submodules-to-monorepo <OPTIONS> <repo-dir> [<branch-name>]
-    Values:
-        repo-dir
-            Path to the main repo directory.
-            Required.
-        branch-name
-            Name of the branch to create for the migration.
-            Optional.
-            Default: from-submodules-to-monorepo
-    Options:
-        --help
-            Show this help message.
-            Optional.
-        --version
-            Show the version of this package.
-            Optional.
-        --acknowledge-risks-and-continue
-            Acknowledge the risks
-            Required.
-        --reset-with-master-or-main-branches
-            Reset the branches to master or main before running transformation.
-            Optional.
-        --no-threads
-            Don't run in parallel threads.
-            Optional. Required if --pull-remotes is used without --nuke-remote.
-        --pull-remotes
-            Pull remotes for all submodules and main repo.
-            Must be used with either --no-threads or --nuke-remote.
-            Optional.
-        --nuke-remote
-            Safety switch to avoid pulling remotes uncontrollably.
-            Optional. Required if --pull-remotes is used without --no-threads.
-        --delete-existing-branches
-            If any branch exist (<branch-name>) then delete them.
-            Optional.
-        --create-report
-            Create a report with the transformation output and tree files to compare before and after.
-            Optional.
-        --create-tree-files
-            Create tree files to compare before and after.
-            Overwritten when using --create-report.
-            Optional.
+<pre>
+<code style="color: rgb(204, 204, 204);">Usage:</code>
+<code style="color: rgb(0, 0, 204);">npx from-submodules-to-monorepo</code> <code style="color: rgb(0, 204, 204);">&lt;</code><code style="color: rgb(204, 204, 0);">OPTIONS</code><code style="color: rgb(0, 204, 204);">&gt;</code> <code style="color: rgb(0, 204, 204);">&lt;</code><code style="color: rgb(204, 204, 0);">repo-dir</code><code style="color: rgb(0, 204, 204);">&gt;</code> <code style="color: rgb(0, 204, 204);">[</code><code style="color: rgb(204, 204, 0);">&lt;branch-name</code><code style="color: rgb(0, 204, 204);">&gt;]</code>
+    <code style="color: rgb(204, 204, 204);">Values:</code>
+        <code style="color: rgb(204, 204, 0);">repo-dir</code>
+            <code style="color: rgb(0, 204, 0);">Path to the main repo directory.</code>
+            <code style="color: rgb(0, 0, 204);">Required.</code>
+        <code style="color: rgb(204, 204, 0);">branch-name</code>
+            <code style="color: rgb(0, 204, 0);">Name of the branch to create for the migration.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code>
+            <code style="color: rgb(0, 0, 204);">Default:</code> <code style="color: rgb(0, 0, 204);">from-submodules-to-monorepo</code>
+    <code style="color: rgb(204, 204, 204);">Options:</code>
+        <code style="color: rgb(204, 204, 0);">--help</code>
+            <code style="color: rgb(0, 204, 0);">Show this help message.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--enable-colors</code>
+            <code style="color: rgb(0, 204, 0);">Enable colors in the output.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--version</code>
+            <code style="color: rgb(0, 204, 0);">Show the version of this package.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--acknowledge-risks-and-continue</code>
+            <code style="color: rgb(0, 204, 0);">Acknowledge the risks</code>
+            <code style="color: rgb(0, 0, 204);">Required.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--reset-with-master-or-main-branches</code>
+            <code style="color: rgb(0, 204, 0);">Reset the branches to master or main before running transformation.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--no-threads</code>
+            <code style="color: rgb(0, 204, 0);">Don&#039;t run in parallel threads.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"> Required if --pull-remotes is used without --nuke-remote.</code>
+        <code style="color: rgb(204, 204, 0);">--pull-remotes</code>
+            <code style="color: rgb(0, 204, 0);">Pull remotes for all submodules and main repo.
+            Must be used with either --no-threads or --nuke-remote.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--nuke-remote</code>
+            <code style="color: rgb(0, 204, 0);">Safety switch to avoid pulling remotes uncontrollably.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"> Required if --pull-remotes is used without --no-threads.</code>
+        <code style="color: rgb(204, 204, 0);">--delete-existing-branches</code>
+            <code style="color: rgb(0, 204, 0);">If any branch exist (&lt;branch-name&gt;) then delete them.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--create-report</code>
+            <code style="color: rgb(0, 204, 0);">Create a report with the transformation output and tree files to compare before and after.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--create-tree-files</code>
+            <code style="color: rgb(0, 204, 0);">Create tree files to compare before and after.
+            Overwritten when using --create-report.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
 
-```
+</pre>
 
 <div id="command-line-usage-end"></div>
 
