@@ -8,11 +8,11 @@
     },
     "search.exclude": {
         "**/node_modules": true,
-        "**/typings": true
+        "**/typings": true,
+        "test-env-data": true
     },
     "files.exclude": {
         "**/node_modules": true,
-        "**/typings": true,
-        "test-env-data": true
+        "**/typings": true
     }
 }
