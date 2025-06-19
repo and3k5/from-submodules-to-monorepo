@@ -14,7 +14,8 @@ export function pushToOrigin(
     submodule: Submodule,
     console: ConsoleBase,
 ) {
-    console.log("   Pushing to origin");
+    console.log("      Pushing to origin (file system)");
+    console.log("         Create remote (stored in file system)");
 
     const localRemotePath = createFileSystemRemote(
         getRemotePath(),
@@ -33,23 +34,23 @@ export function pushToOrigin(
         // suppress
     }
 
-    console.log(`   Adding remote: ${remoteUrl}`);
+    console.log(`         Adding remote: ${remoteUrl}`);
 
     run("git", ["remote", "add", remoteName, remoteUrl], {
         cwd: fullPath,
     });
 
-    console.log(`   Pushing delete (existing) branch on remote: ${remoteName}`);
     try {
         execFileSync("git", ["push", remoteName, `:${migrationBranchName}`], {
             cwd: fullPath,
             stdio: "ignore",
         });
+        console.log(`         Deleted existing branch on remote: ${remoteName}`);
     } catch {
         // nothing
     }
 
-    console.log(`   Pushing to remote: ${remoteName}`);
+    console.log(`         Pushing to remote: ${remoteName}`);
 
     execFileSync("git", ["push", remoteName, migrationBranchName], {
         cwd: fullPath,

@@ -131,11 +131,15 @@ export async function performTransformation(
         dirForTreeFiles = resolve(mainRepoDir, "..");
     }
 
-    console.log("Going to transform directory:");
-    console.log(`   ${mainRepoDir}`);
+    console.log("from-submodules-to-monorepo");
+    console.log("   version: " + __VERSION__);
+    console.log("");
+    console.log("Going to perform transformation:");
+    console.log(`   Directory: ${process.cwd()}`);
+    console.log(`   Repo dir: ${relative(process.cwd(), mainRepoDir)}`);
     if (dirForTreeFiles != null) {
         console.log(
-            "Creating tree file before transformation to " + dirForTreeFiles,
+            "Tree files: " + dirForTreeFiles,
         );
         treeBeforePath = await createTreeFile(
             mainRepoDir,
@@ -144,6 +148,7 @@ export async function performTransformation(
         );
     }
     if (resetWithMasterOrMainBranches) {
+        console.log("");
         console.log("Resetting repos first");
         const lines = await checkoutBranches(
             mainRepoDir,
@@ -157,26 +162,31 @@ export async function performTransformation(
             console,
         );
         for (const line of lines) {
-            console.log(line);
+            console.log("   "+line.replaceAll("\n","\n   "));
         }
     }
+    console.log("");
     console.log(
         (resumeFromExistingBranch ? "Resuming from" : "Creating new") +
             " migration branch:",
     );
     console.log(`   ${migrationBranchName}`);
-
+    
     if (deleteExistingBranches) {
         try {
             execFileSync("git", ["branch", "-D", migrationBranchName], {
                 cwd: mainRepoDir,
                 stdio: "ignore",
             });
+            console.log(``);
+            console.log(`Deleted existing branch ${migrationBranchName}`);
         } catch {
             // nothing
         }
     }
 
+    console.log(``);
+    console.log(`Checking out branch ${migrationBranchName}`);
     run(
         "git",
         [
@@ -189,6 +199,7 @@ export async function performTransformation(
 
     const submodules = readGitmodules(join(mainRepoDir, ".gitmodules"));
 
+    console.log(``);
     console.log("Performing transformation:");
 
     const workers: Promise<{
@@ -209,7 +220,7 @@ export async function performTransformation(
         const fullPath = ensureSameCaseForPath(
             resolve(mainRepoDir, submodule.path),
         );
-        console.log("Queued " + relative(mainRepoDir, fullPath));
+        console.log("   Queued " + relative(mainRepoDir, fullPath));
         const workerThread = applyTransformationForSubmodule(
             mainRepoDir,
             migrationBranchName,
@@ -236,7 +247,7 @@ export async function performTransformation(
             .finally(() => {
                 workersLeft--;
                 console.log(
-                    `Workers left: ${workersLeft} / ${totalWorkers}` +
+                    `   Workers left: ${workersLeft} / ${totalWorkers}` +
                         (failed > 0
                             ? ` \x1b[31m(${failed} failed)\x1b[0m`
                             : ""),

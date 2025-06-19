@@ -28,12 +28,14 @@ import { pullFlag } from "../utils/args/pull-flag";
                 encoding: "utf-8",
             });
             const equal = beforeTree == afterTree;
-            console.log("Tree remained equal: " + equal);
 
             if (equal) {
-                console.log("Test passed!");
-            } else {
-                console.log("Test failed!");
+                console.log("🟢 Tree remained equal!")
+                console.log("Test passed! 👍");
+            }else{
+                console.error("🔴 Tree did not remain equal!")
+                console.error("Test failed! 👎");
+                process.exit(1);
             }
         }
     } catch (e) {

@@ -8,7 +8,7 @@
     },
     "directories": {},
     "scripts": {
-        "test": "npm run build:dev -- --devtool source-map && node dist/test",
+        "test": "npm run build:dev -- --devtool source-map && node dist/test --enable-colors",
         "format": "prettier . --write",
         "eslint": "eslint",
         "postversion": "npm run routines:versioning:read-version -- --run-command",

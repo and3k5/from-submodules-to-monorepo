@@ -9,16 +9,16 @@ export function checkoutModule(
     console: ConsoleBase,
 ) {
     if (deleteExistingBranches) {
-        console.log("Trying to delete existing branch: " + migrationBranchName);
         try {
             execFileSync("git", ["branch", "-D", migrationBranchName], {
                 cwd: fullPath,
                 stdio: "ignore",
             });
+            console.log("      Deleted existing branch: " + migrationBranchName);
         } catch {
             // nothing
         }
     }
     run("git", ["checkout", "-b", migrationBranchName], { cwd: fullPath });
-    console.log(`   Created branch: ${migrationBranchName}`);
+    console.log(`      Created branch: ${migrationBranchName}`);
 }

@@ -18,12 +18,15 @@ export function moveFiles(
     const correctCasedSubmodulePath = basename(fullPath);
     const targetPath = join(fullPath, correctCasedSubmodulePath);
     console.log(
-        `   Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
+        `      Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
     );
     const tempKeyword = "_TEMP_DUP";
     const targetPathExists = existsSync(targetPath);
     const tempNameForExistingPath = `${basename(ensureSameCaseForPath(targetPath))}${tempKeyword}`;
     if (targetPathExists) {
+        console.log(
+            `         Target path already exists, moving it to ${tempNameForExistingPath}`,
+        );
         run(
             "git",
             [
@@ -61,7 +64,7 @@ export function moveFiles(
             continue;
         }
         console.log(
-            "      mv " +
+            "            mv " +
                 relative(mainRepoDir, entryPath) +
                 " " +
                 relative(mainRepoDir, targetPath),
@@ -84,9 +87,12 @@ export function moveFiles(
         );
     }
 
-    console.log("   Adding moved files to commit");
-
+    console.log("         Stage files to commit");
+    
     execFileSync("git", ["add", "."], { cwd: fullPath, stdio: "ignore" });
+    
+    console.log("         Commit");
+
     execFileSync("git", ["commit", "-m", "Moving submodule files"], {
         cwd: fullPath,
         stdio: "ignore",

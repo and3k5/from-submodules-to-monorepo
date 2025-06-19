@@ -11,7 +11,7 @@ export async function removeSubmodule(
     console: ConsoleBase,
 ) {
     if (submodule.path == null) throw new Error("missing path for submodule");
-    console.log("   Removing submodule from main repo");
+    console.log("      Removing submodule from main repo");
 
     run(
         "git",
@@ -25,7 +25,7 @@ export async function removeSubmodule(
         },
     );
 
-    console.log("   Committing submodule removal");
+    console.log("         Commit");
 
     execFileSync(
         "git",

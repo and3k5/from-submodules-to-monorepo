@@ -14,31 +14,32 @@ export async function pullSubmoduleToMainRepo(
     migrationBranchName: string,
     console: ConsoleBase,
 ): Promise<void> {
-    console.log("   Pulling submodule into main repo");
-
+    console.log("      Pulling submodule into main repo");
+    
     const localRemotePath = createFileSystemRemote(
         getRemotePath(),
         getOriginNameForSubmodule(mainRepoDir, submodule),
     );
     const remoteUrl = fileSystemRemoteUrl(localRemotePath);
     const remoteName = `origin_${submodule.path}`;
-
+    
     try {
         execFileSync("git", ["remote", "remove", remoteName], {
             stdio: "ignore",
             cwd: mainRepoDir,
         });
+        console.log("         Removed existing remote in main repo");
     } catch {
         // suppress
     }
 
-    console.log(`   Adding remote: ${remoteUrl}`);
+    console.log(`         Adding new remote to main repo: ${remoteUrl}`);
 
     run("git", ["remote", "add", remoteName, remoteUrl], {
         cwd: mainRepoDir,
     });
 
-    console.log(`   Pull origin branch into main repo`);
+    console.log(`         Pull branch from remote into main repo`);
 
     run(
         "git",
@@ -60,12 +61,15 @@ export async function pullSubmoduleToMainRepo(
             ],
             { cwd: mainRepoDir, stdio: "ignore" },
         );
+        console.log("         Merged branch into main repo successfully");
     } catch (error) {
+        console.log("         Merged branch into main repo failed!");
         if (
             error.status !== 1 ||
             !(await autoResolveConflicts(mainRepoDir, false))
         ) {
             throw error;
         }
+        console.log("         Resolved conflicts and merged branch into main repo");
     }
 }
