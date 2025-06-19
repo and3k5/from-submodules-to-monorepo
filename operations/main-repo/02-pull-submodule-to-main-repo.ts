@@ -64,8 +64,10 @@ export async function pullSubmoduleToMainRepo(
         console.log("         Merged branch into main repo successfully");
     } catch (error) {
         console.log("         Merged branch into main repo failed!");
+        if (error.status !== 1 ) {
+            throw error;
+        }
         if (
-            error.status !== 1 ||
             !(await autoResolveConflicts(mainRepoDir, false))
         ) {
             throw error;
