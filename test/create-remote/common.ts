@@ -30,6 +30,7 @@ export function createRemote(
     createFileSystemRemote(remoteDir, moduleName);
     const actualDir = cloneRepo(moduleName, tempDir);
 
+    run("git", ["config", "core.autocrlf", "false"], { cwd: actualDir });
     run("git", ["config", "user.name", "example user"], { cwd: actualDir });
     run("git", ["config", "user.email", "user@example.com"], {
         cwd: actualDir,
