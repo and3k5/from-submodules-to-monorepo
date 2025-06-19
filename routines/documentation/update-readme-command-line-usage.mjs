@@ -9,7 +9,7 @@ const output = execFileSync("npx", [".", "--help", "--enable-colors"], {
     encoding: "utf-8",
 });
 
-const readmeContent = readFileSync("README.md", { encoding: "utf-8" }).split(
+const readmeContent = readFileSync("USAGE.md", { encoding: "utf-8" }).split(
     "\n",
 );
 
@@ -22,14 +22,14 @@ const endIndex = readmeContent
 
 if (beginIndex === -1) {
     console.error(
-        'Error: <div id="command-line-usage-begin"></div> not found in README.md',
+        'Error: <div id="command-line-usage-begin"></div> not found in USAGE.md',
     );
     process.exit(1);
 }
 
 if (endIndex === -1) {
     console.error(
-        'Error: <div id="command-line-usage-end"></div> not found in README.md',
+        'Error: <div id="command-line-usage-end"></div> not found in USAGE.md',
     );
     process.exit(1);
 }
@@ -117,5 +117,5 @@ function ansiToHtml(ansiString) {
     return html;
 }
 
-writeFileSync("README.md", readmeContent.join("\n"), { encoding: "utf-8" });
-console.log("README.md updated with command line usage.");
+writeFileSync("USAGE.md", readmeContent.join("\n"), { encoding: "utf-8" });
+console.log("USAGE.md updated with command line usage.");
