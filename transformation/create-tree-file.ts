@@ -17,7 +17,7 @@ export async function createTreeFile(
     writeFileSync(join(location, filename), content, { encoding: "utf8" });
 
     if (fileTree) {
-        const content2 = map(fileTree, dir)?.join("\n") ?? "";
+        const content2 = flattenTreeToList(fileTree, dir)?.join("\n") ?? "";
         
         writeFileSync(join(location, filename)+"_filelist.txt", content2, { encoding: "utf8" });
     }
@@ -25,7 +25,7 @@ export async function createTreeFile(
     return fullPath;
 }
 
-function map(fileTree : FileTreeItem, path: string) : string[] | undefined {
+export function flattenTreeToList(fileTree : FileTreeItem, path: string) : string[] | undefined {
     if (fileTree.type === "file") {
         return [join(path, fileTree.name)+":"+fileTree.size];
     }
@@ -38,7 +38,7 @@ function map(fileTree : FileTreeItem, path: string) : string[] | undefined {
         }
         const result : string[] = [];
         for (const child of fileTree.children) { 
-            const res = map(child, join(path, fileTree.name));
+            const res = flattenTreeToList(child, join(path, fileTree.name));
             if (!res) continue;
             result.push(...res);
         }
