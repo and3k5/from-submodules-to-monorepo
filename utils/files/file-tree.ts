@@ -11,14 +11,16 @@ interface FileItem {
 interface DirectoryItem {
     name: string;
     type: "dir";
-    children: Array<FileItem | DirectoryItem>;
+    children: Array<FileTreeItem>;
 }
+
+export type FileTreeItem = FileItem | DirectoryItem;
 
 interface GetFileTreeOptions {
     excludedFiles?: string[];
 }
 
-async function getFileTreeItems(
+export async function getFileTreeItems(
     dirPath: string,
     options?: GetFileTreeOptions | undefined,
 ): Promise<DirectoryItem | FileItem | undefined> {
@@ -26,9 +28,7 @@ async function getFileTreeItems(
 
     const hiddenDetector = await createHiddenDetector(dirPath);
 
-    function buildTree(
-        currentPath: string,
-    ): FileItem | DirectoryItem | undefined {
+    function buildTree(currentPath: string): FileTreeItem | undefined {
         const stats = fs.statSync(currentPath);
 
         if (hiddenDetector(currentPath)) {
@@ -61,9 +61,7 @@ async function getFileTreeItems(
     return buildTree(resolve(dirPath));
 }
 
-async function renderFileTree(
-    treeItem: FileItem | DirectoryItem,
-): Promise<string> {
+export async function renderFileTree(treeItem: FileTreeItem): Promise<string> {
     return JSON.stringify(treeItem, null, 4);
 }
 
