@@ -49,6 +49,7 @@ export function moveFiles(
         }).stdout as string
     )
         .split("\n")
+        .map(x => x.trim())
         .filter((e) => e != "");
 
     for (const entry of entries) {
