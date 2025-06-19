@@ -17,6 +17,7 @@ import { pullFlag } from "../utils/args/pull-flag";
             const result = await performTransformation(mainRepoDir, {
                 migrationBranchName: "migrate-from-submodules-to-monorepo",
                 createReport: true,
+                keepUntrackedFiles: true,
             });
 
             //await createTreeFile(mainRepoDir, "tree-after.json", resolve(mainRepoDir, ".."));
