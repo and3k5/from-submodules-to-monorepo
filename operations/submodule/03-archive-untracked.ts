@@ -3,6 +3,7 @@ import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
 import { run } from "../../utils/process/run";
 import { create } from "tar";
+import { existsSync } from "fs";
 
 export async function archiveUntrackedFiles(
     mainRepoDir: string,
@@ -53,4 +54,15 @@ export async function archiveUntrackedFiles(
 
     console.log("      Arvhive created:");
     console.log(`        ${archivePath}`);
+
+    console.log("      Running git clean");
+    run("git", ["clean", "-fdx"], {
+        cwd: fullPath,
+    });
+
+    for (const file of files) {
+        if (existsSync(file)) {
+            throw new Error(`File ${file} does still exist!`)
+        }
+    }
 }
