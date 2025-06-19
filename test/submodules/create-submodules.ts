@@ -13,6 +13,15 @@ import { gitPush } from "../utils/git/git-push";
 
 function createHelper(remotes: string[], mySystemDir: string) {
     return {
+        setUpUser(folderName: string) {
+            const actualDir = resolve(mySystemDir, folderName);
+            run("git", ["config", "user.name", "example user"], {
+                cwd: actualDir,
+            });
+            run("git", ["config", "user.email", "user@example.com"], {
+                cwd: actualDir,
+            });
+        },
         addSubmoduleToMainRepo(
             submoduleName: string,
             folderName: string | undefined,
@@ -181,6 +190,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log("   - Webserver");
     h.addSubmoduleToMainRepo("Webserver", "webserver");
+    h.setUpUser("webserver");
     h.addAdditionalDir("webserver", "bogus", {force: false});
     h.addAdditionalDir("webserver", "Webserver", {force: false});
     h.pullRepo("webserver", "commons");
@@ -194,6 +204,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - Documentation");
     h.addSubmoduleToMainRepo("Documentation", "documentation");
+    h.setUpUser("documentation");
     h.addAdditionalDir("documentation", "bogus", {force: false});
     h.addAdditionalFile("documentation", "Documentation");
     h.pushRepo("documentation");
@@ -201,6 +212,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - Commandline");
     h.addSubmoduleToMainRepo("Commandline", "commandline");
+    h.setUpUser("commandline");
     h.addAdditionalDir("commandline", "bogus", {force: false});
     h.addAdditionalFile("commandline", "commandline");
     h.pullRepo("commandline", "commons");
@@ -209,6 +221,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - service");
     h.addSubmoduleToMainRepo("service", undefined);
+    h.setUpUser("service");
     h.addAdditionalDir("service", "bogus", {force: false});
     h.pullRepo("service", "commons");
     h.modifyFile("service", "README-commons.md", "Foobar");
@@ -217,6 +230,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - surveillance");
     h.addSubmoduleToMainRepo("surveillance", undefined);
+    h.setUpUser("surveillance");
     h.addAdditionalDir("surveillance", "bogus", {force: false});
     h.pullRepo("surveillance", "commons");
     h.pushRepo("surveillance");
@@ -224,6 +238,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - worker");
     h.addSubmoduleToMainRepo("worker", undefined);
+    h.setUpUser("worker");
     h.addAdditionalDir("worker", "bogus", {force: false});
     h.pullRepo("worker", "commons");
     h.modifyFile("worker", "README-commons.md", "Foobar2");
@@ -232,19 +247,12 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
 
     console.log(" - data-and-stuff");
     h.addSubmoduleToMainRepo("data-and-stuff", "data");
+    h.setUpUser("data");
     h.addAdditionalDir("data", "bogus", {force: false});
     h.addAdditionalFile("data", "DEMO.md");
     h.pullRepo("data", "commons");
     h.pushRepo("data");
     submoduleFolderNames.push("data");
-
-    // TODO: is user.xxx config needed?
-    // run("git", ["config", "user.name", "example user"], {
-    //     cwd: actualDir,
-    // });
-    // run("git", ["config", "user.email", "user@example.com"], {
-    //     cwd: actualDir,
-    // });
 
     return submoduleFolderNames;
 }
