@@ -198,6 +198,9 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     submoduleFolderNames.push("webserver");
     h.modifyFile("webserver", ".gitignore", "hocus_pocus");
     h.addAdditionalDir("webserver", "hocus_pocus", { force: true });
+    h.addAdditionalDir("webserver", "node_modules", undefined);
+    h.appendFile("webserver", "README-commons.md", "\nnode_modules");
+    h.ensureNotTracked("webserver", "node_modules");
 
     console.log(" - Documentation");
     h.addSubmoduleToMainRepo("Documentation", "documentation");
