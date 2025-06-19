@@ -1,10 +1,11 @@
 #!/bin/node
 import { mkdirSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
-import { Submodule, submodules } from "./submodules";
+import { getSubmodules } from "./submodules/test-submodules";
 import { cleanWithRetries } from "./utils/fs/clean-with-retries";
 import { createRemoteThread } from "./create-remote";
 import { testOutDir } from "./globals";
+import { Submodule } from "./submodules";
 
 const remoteDir = resolve(testOutDir, "remote");
 
@@ -24,9 +25,9 @@ export async function createRemotes() {
 
     console.log("  make local remotes directories");
 
-    const createRemoteTasks: Promise<void>[] = [];
+    const createRemoteTasks: Promise<{name: string}>[] = [];
 
-    for (const module of submodules
+    for (const module of getSubmodules()
         .map(
             (x) =>
                 ({ submodule: true, name: x.name, src: x }) as {
@@ -43,14 +44,20 @@ export async function createRemotes() {
             module.src?.customReadMeName,
         ).then((contents) => {
             console.log(contents.join("\n"));
+            return {
+                name: module.name,
+
+            }
         });
         createRemoteTasks.push(createRemoteTask);
     }
-    await Promise.all(createRemoteTasks);
+    const results = await Promise.all(createRemoteTasks);
 
     rmSync(tempDir, {
         recursive: true,
     });
+
+    return results.map(x => x.name);
 }
 
 if (require.main?.id === module.id) {
