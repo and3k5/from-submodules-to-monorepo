@@ -2,7 +2,7 @@ import { workerData, isMainThread, parentPort } from "worker_threads";
 import { createConsoleWrapper } from "../../../utils/output/console-wrapper";
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
-import { extract } from "tar";
+import { extract, list } from "tar";
 
 if (!isMainThread) {
     const keepUntrackedFilesPath = workerData.keepUntrackedFilesPath;
@@ -23,11 +23,24 @@ if (!isMainThread) {
             const filePath = join(keepUntrackedFilesPath, file);
             console.log(`Extracting ${filePath} to ${mainRepoDir}`);
             const pathsToCheck: string[] = [];
+            await list({
+                file: filePath,
+                onReadEntry: (entry) => {
+                    pathsToCheck.push(entry.path);
+                },
+            });
+            for (const pathToCheck of pathsToCheck) {
+                const actualPath = join(mainRepoDir, pathToCheck);
+                if (existsSync(actualPath)) {
+                    throw new Error(
+                        `File ${actualPath} should not exist`,
+                    );
+                }
+            }
             await extract({
                 file: filePath,
                 cwd: mainRepoDir,
                 onReadEntry: (entry) => {
-                    pathsToCheck.push(entry.path);
                     console.log(`Read entry ${entry.path}`);
                 },
                 onWriteEntry: (entry) => {
@@ -41,8 +54,6 @@ if (!isMainThread) {
                     throw new Error(
                         `Unpack of ${file} should result in a file to exist but it didn't. File path: ${actualPath}`,
                     );
-                }else{
-                    console.log(actualPath+" exists!");
                 }
             }
         }
