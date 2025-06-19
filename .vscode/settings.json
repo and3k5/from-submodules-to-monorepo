@@ -9,7 +9,8 @@
     "search.exclude": {
         "**/node_modules": true,
         "**/typings": true,
-        "test-env-data": true
+        "test-env-data": true,
+        "**/package-lock.json": true
     },
     "files.exclude": {
         "**/node_modules": true,
