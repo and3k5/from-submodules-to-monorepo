@@ -9,7 +9,7 @@ export const createRemoteThread: (
         Parameters<typeof createRemote>[2],
         Parameters<typeof createRemote>[3],
     ]
-) => Promise<string[]> = function checkoutBranchThread(
+) => Promise<string[]> = function (
     tempDir,
     moduleName,
     isSubmodule,
