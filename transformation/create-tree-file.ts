@@ -1,7 +1,6 @@
 import { join } from "path";
 import {
     FileTreeItem,
-    getFileTree,
     getFileTreeItems,
     renderFileTree,
 } from "../utils/files/file-tree";
