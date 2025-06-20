@@ -21,7 +21,7 @@ export async function createSubModules() {
     const remotes = await createRemotes();
 
     console.log("create submodules:");
-    console.log("  clean ./dev/");
+    console.log("  clean "+devDir);
     if (!existsSync(devDir)) {
         mkdirSync(devDir, { recursive: true });
     }

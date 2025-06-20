@@ -15,6 +15,8 @@ import { createTreeFile } from "./transformation/create-tree-file";
 import { mkdir } from "fs/promises";
 import { createConfig, getCommandValues } from "./utils/args/command-config";
 import { execFileSync } from "child_process";
+import { createTempDir } from "./utils/storage/create-temp-dir";
+import { performUnpackAllArchives } from "./operations/main-repo/04-unpack-archives";
 
 interface PerformTransformationOptions {
     /** Branch name to create for the migration */
@@ -35,6 +37,8 @@ interface PerformTransformationOptions {
     createTreeFiles?: boolean;
     /** Create a report directory with all the information and output from the transformation */
     createReport?: boolean;
+    /** Keep all untracked files after transformation */
+    keepUntrackedFiles?: boolean;
 }
 
 interface TransformationResult {
@@ -55,6 +59,7 @@ export async function performTransformation(
         nukeRemote,
         createTreeFiles,
         createReport,
+        keepUntrackedFiles
     }: PerformTransformationOptions,
 ): Promise<TransformationResult> {
     if (typeof mainRepoDir != "string")
@@ -137,6 +142,11 @@ export async function performTransformation(
     console.log("Going to perform transformation:");
     console.log(`   Directory: ${process.cwd()}`);
     console.log(`   Repo dir: ${relative(process.cwd(), mainRepoDir)}`);
+    let keepUntrackedFilesPath : string | undefined = undefined;
+    if (keepUntrackedFiles) {
+        keepUntrackedFilesPath  = createTempDir();
+        console.log(`   Keeping untracked files. Stores archives in ${keepUntrackedFilesPath}`);
+    }
     if (dirForTreeFiles != null) {
         console.log(
             "Tree files: " + dirForTreeFiles,
@@ -228,6 +238,7 @@ export async function performTransformation(
             submodule,
             submodules,
             deleteExistingBranches ?? false,
+            keepUntrackedFilesPath,
         )
             .then((logOutput) => ({
                 submodule,
@@ -285,6 +296,14 @@ export async function performTransformation(
             migrationBranchName,
             console,
         );
+    }
+
+    if (keepUntrackedFilesPath != null) {
+        console.log("Unpacking all archives in " + keepUntrackedFilesPath);
+        const lines = await performUnpackAllArchives(keepUntrackedFilesPath, mainRepoDir);
+        for (const line of lines) {
+            console.log("   "+line.replaceAll("\n","\n   "));
+        }
     }
 
     if (dirForTreeFiles != null) {

@@ -2,6 +2,8 @@ import { createSubModules } from "./create-submodules";
 import { performTransformation } from "../perform-transformation";
 import { readFileSync } from "fs";
 import { pullFlag } from "../utils/args/pull-flag";
+import { diff } from "./diff-tree";
+import { FileTreeItem } from "../utils/files/file-tree";
 
 (async function () {
     try {
@@ -17,6 +19,7 @@ import { pullFlag } from "../utils/args/pull-flag";
             const result = await performTransformation(mainRepoDir, {
                 migrationBranchName: "migrate-from-submodules-to-monorepo",
                 createReport: true,
+                keepUntrackedFiles: true,
             });
 
             //await createTreeFile(mainRepoDir, "tree-after.json", resolve(mainRepoDir, ".."));
@@ -30,10 +33,14 @@ import { pullFlag } from "../utils/args/pull-flag";
             const equal = beforeTree == afterTree;
 
             if (equal) {
-                console.log("🟢 Tree remained equal!")
+                console.log("🟢 Tree remained equal!");
                 console.log("Test passed! 👍");
-            }else{
-                console.error("🔴 Tree did not remain equal!")
+            } else {
+                console.error("Tree has differences:");
+                const beforeJson = JSON.parse(beforeTree) as FileTreeItem;
+                const afterJson = JSON.parse(afterTree) as FileTreeItem;
+                diff(beforeJson, afterJson);
+                console.error("🔴 Tree did not remain equal!");
                 console.error("Test failed! 👎");
                 process.exit(1);
             }
