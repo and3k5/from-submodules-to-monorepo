@@ -15,14 +15,14 @@ export async function pullSubmoduleToMainRepo(
     console: ConsoleBase,
 ): Promise<void> {
     console.log("      Pulling submodule into main repo");
-    
+
     const localRemotePath = createFileSystemRemote(
         getRemotePath(),
         getOriginNameForSubmodule(mainRepoDir, submodule),
     );
     const remoteUrl = fileSystemRemoteUrl(localRemotePath);
     const remoteName = `origin_${submodule.path}`;
-    
+
     try {
         execFileSync("git", ["remote", "remove", remoteName], {
             stdio: "ignore",
@@ -64,14 +64,14 @@ export async function pullSubmoduleToMainRepo(
         console.log("         Merged branch into main repo successfully");
     } catch (error) {
         console.log("         Merged branch into main repo failed!");
-        if (error.status !== 1 ) {
+        if (error.status !== 1) {
             throw error;
         }
-        if (
-            !(await autoResolveConflicts(mainRepoDir, false))
-        ) {
+        if (!(await autoResolveConflicts(mainRepoDir, false))) {
             throw error;
         }
-        console.log("         Resolved conflicts and merged branch into main repo");
+        console.log(
+            "         Resolved conflicts and merged branch into main repo",
+        );
     }
 }

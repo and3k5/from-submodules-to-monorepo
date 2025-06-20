@@ -45,7 +45,9 @@ export function pushToOrigin(
             cwd: fullPath,
             stdio: "ignore",
         });
-        console.log(`         Deleted existing branch on remote: ${remoteName}`);
+        console.log(
+            `         Deleted existing branch on remote: ${remoteName}`,
+        );
     } catch {
         // nothing
     }

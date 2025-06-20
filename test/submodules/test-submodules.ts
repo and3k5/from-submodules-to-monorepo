@@ -1,7 +1,6 @@
 import { Submodule } from ".";
 
-
-export const submodules : {[key: string]: Submodule}= {
+export const submodules: { [key: string]: Submodule } = {
     commons: {
         name: "commons",
         customReadMeName: "README-commons.md",
@@ -31,10 +30,10 @@ export const submodules : {[key: string]: Submodule}= {
     },
 };
 
-export function getSubmodule(key : keyof typeof submodules) {
+export function getSubmodule(key: keyof typeof submodules) {
     return submodules[key];
 }
 
-export function getSubmodules() : Submodule[] {
-    return Object.keys(submodules).map(x => submodules[x]);
+export function getSubmodules(): Submodule[] {
+    return Object.keys(submodules).map((x) => submodules[x]);
 }

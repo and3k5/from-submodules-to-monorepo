@@ -1,7 +1,10 @@
 import { isMainThread, Worker } from "worker_threads";
 import { URL as NodeURL } from "url";
 
-export function performUnpackAllArchives(keepUntrackedFilesPath : string, mainRepoDir : string) : Promise<string[]> {
+export function performUnpackAllArchives(
+    keepUntrackedFilesPath: string,
+    mainRepoDir: string,
+): Promise<string[]> {
     if (!isMainThread) {
         throw new Error("Should not be used inside thread");
     }

@@ -119,14 +119,19 @@ function createHelper(remotes: string[], mySystemDir: string) {
         pullRepo(folderName: string, pullFrom: string) {
             const actualDir = resolve(mySystemDir, folderName);
             const pullFromRemoteUrl = remotePath(pullFrom);
-            console.log("       Pull from "+ pullFrom);
-            console.log("         Add remote origin_"+pullFrom+" to pull from "+ pullFrom);
+            console.log("       Pull from " + pullFrom);
+            console.log(
+                "         Add remote origin_" +
+                    pullFrom +
+                    " to pull from " +
+                    pullFrom,
+            );
             run(
                 "git",
                 ["remote", "add", `origin_${pullFrom}`, pullFromRemoteUrl],
                 { cwd: actualDir },
             );
-            console.log("         Fetch origin_"+ pullFrom);
+            console.log("         Fetch origin_" + pullFrom);
             run(
                 "git",
                 [
@@ -139,7 +144,7 @@ function createHelper(remotes: string[], mySystemDir: string) {
                     cwd: actualDir,
                 },
             );
-            console.log("         Merge origin_"+ pullFrom);
+            console.log("         Merge origin_" + pullFrom);
             run(
                 "git",
                 [
@@ -150,9 +155,14 @@ function createHelper(remotes: string[], mySystemDir: string) {
                 { cwd: actualDir },
             );
         },
-        modifyFile(folderName: string, filename: string, content: string, phrase = "Modify") {
+        modifyFile(
+            folderName: string,
+            filename: string,
+            content: string,
+            phrase = "Modify",
+        ) {
             const actualDir = resolve(mySystemDir, folderName);
-            console.log("       "+phrase+" "+ filename);
+            console.log("       " + phrase + " " + filename);
             writeFileSync(resolve(actualDir, filename), content, {
                 encoding: "utf-8",
             });
@@ -171,7 +181,7 @@ function createHelper(remotes: string[], mySystemDir: string) {
         },
         deleteFile(folderName: string, filename: string) {
             const actualDir = resolve(mySystemDir, folderName);
-            console.log("       Remove "+ filename);
+            console.log("       Remove " + filename);
             run("git", ["rm", filename], { cwd: actualDir });
             console.log("         Commit");
             gitCommit("Deleted: " + filename, actualDir);
@@ -191,8 +201,8 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log("   - Webserver");
     h.addSubmoduleToMainRepo("Webserver", "webserver");
     h.setUpUser("webserver");
-    h.addAdditionalDir("webserver", "bogus", {force: false});
-    h.addAdditionalDir("webserver", "Webserver", {force: false});
+    h.addAdditionalDir("webserver", "bogus", { force: false });
+    h.addAdditionalDir("webserver", "Webserver", { force: false });
     h.pullRepo("webserver", "commons");
     h.pushRepo("webserver");
     submoduleFolderNames.push("webserver");
@@ -205,7 +215,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - Documentation");
     h.addSubmoduleToMainRepo("Documentation", "documentation");
     h.setUpUser("documentation");
-    h.addAdditionalDir("documentation", "bogus", {force: false});
+    h.addAdditionalDir("documentation", "bogus", { force: false });
     h.addAdditionalFile("documentation", "Documentation");
     h.pushRepo("documentation");
     submoduleFolderNames.push("documentation");
@@ -213,7 +223,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - Commandline");
     h.addSubmoduleToMainRepo("Commandline", "commandline");
     h.setUpUser("commandline");
-    h.addAdditionalDir("commandline", "bogus", {force: false});
+    h.addAdditionalDir("commandline", "bogus", { force: false });
     h.addAdditionalFile("commandline", "commandline");
     h.pullRepo("commandline", "commons");
     h.pushRepo("commandline");
@@ -222,7 +232,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - service");
     h.addSubmoduleToMainRepo("service", undefined);
     h.setUpUser("service");
-    h.addAdditionalDir("service", "bogus", {force: false});
+    h.addAdditionalDir("service", "bogus", { force: false });
     h.pullRepo("service", "commons");
     h.modifyFile("service", "README-commons.md", "Foobar");
     h.pushRepo("service");
@@ -231,7 +241,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - surveillance");
     h.addSubmoduleToMainRepo("surveillance", undefined);
     h.setUpUser("surveillance");
-    h.addAdditionalDir("surveillance", "bogus", {force: false});
+    h.addAdditionalDir("surveillance", "bogus", { force: false });
     h.pullRepo("surveillance", "commons");
     h.pushRepo("surveillance");
     submoduleFolderNames.push("surveillance");
@@ -239,7 +249,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - worker");
     h.addSubmoduleToMainRepo("worker", undefined);
     h.setUpUser("worker");
-    h.addAdditionalDir("worker", "bogus", {force: false});
+    h.addAdditionalDir("worker", "bogus", { force: false });
     h.pullRepo("worker", "commons");
     h.modifyFile("worker", "README-commons.md", "Foobar2");
     h.pushRepo("worker");
@@ -248,7 +258,7 @@ export function createSubmodules(remotes: string[], mySystemDir: string) {
     console.log(" - data-and-stuff");
     h.addSubmoduleToMainRepo("data-and-stuff", "data");
     h.setUpUser("data");
-    h.addAdditionalDir("data", "bogus", {force: false});
+    h.addAdditionalDir("data", "bogus", { force: false });
     h.addAdditionalFile("data", "DEMO.md");
     h.pullRepo("data", "commons");
     h.pushRepo("data");

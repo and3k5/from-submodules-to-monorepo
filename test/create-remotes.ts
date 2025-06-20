@@ -25,7 +25,7 @@ export async function createRemotes() {
 
     console.log("  make local remotes directories");
 
-    const createRemoteTasks: Promise<{name: string}>[] = [];
+    const createRemoteTasks: Promise<{ name: string }>[] = [];
 
     for (const module of getSubmodules()
         .map(
@@ -46,8 +46,7 @@ export async function createRemotes() {
             console.log(contents.join("\n"));
             return {
                 name: module.name,
-
-            }
+            };
         });
         createRemoteTasks.push(createRemoteTask);
     }
@@ -57,7 +56,7 @@ export async function createRemotes() {
         recursive: true,
     });
 
-    return results.map(x => x.name);
+    return results.map((x) => x.name);
 }
 
 if (require.main?.id === module.id) {

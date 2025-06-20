@@ -49,7 +49,7 @@ export function moveFiles(
         }).stdout as string
     )
         .split("\n")
-        .map(x => x.trim())
+        .map((x) => x.trim())
         .filter((e) => e != "");
 
     for (const entry of entries) {
@@ -89,9 +89,9 @@ export function moveFiles(
     }
 
     console.log("         Stage files to commit");
-    
+
     execFileSync("git", ["add", "."], { cwd: fullPath, stdio: "ignore" });
-    
+
     console.log("         Commit");
 
     execFileSync("git", ["commit", "-m", "Moving submodule files"], {

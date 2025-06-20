@@ -32,9 +32,7 @@ if (!isMainThread) {
             for (const pathToCheck of pathsToCheck) {
                 const actualPath = join(mainRepoDir, pathToCheck);
                 if (existsSync(actualPath)) {
-                    throw new Error(
-                        `File ${actualPath} should not exist`,
-                    );
+                    throw new Error(`File ${actualPath} should not exist`);
                 }
             }
             await extract({

@@ -59,7 +59,7 @@ export async function performTransformation(
         nukeRemote,
         createTreeFiles,
         createReport,
-        keepUntrackedFiles
+        keepUntrackedFiles,
     }: PerformTransformationOptions,
 ): Promise<TransformationResult> {
     if (typeof mainRepoDir != "string")
@@ -142,15 +142,15 @@ export async function performTransformation(
     console.log("Going to perform transformation:");
     console.log(`   Directory: ${process.cwd()}`);
     console.log(`   Repo dir: ${relative(process.cwd(), mainRepoDir)}`);
-    let keepUntrackedFilesPath : string | undefined = undefined;
+    let keepUntrackedFilesPath: string | undefined = undefined;
     if (keepUntrackedFiles) {
-        keepUntrackedFilesPath  = createTempDir();
-        console.log(`   Keeping untracked files. Stores archives in ${keepUntrackedFilesPath}`);
+        keepUntrackedFilesPath = createTempDir();
+        console.log(
+            `   Keeping untracked files. Stores archives in ${keepUntrackedFilesPath}`,
+        );
     }
     if (dirForTreeFiles != null) {
-        console.log(
-            "Tree files: " + dirForTreeFiles,
-        );
+        console.log("Tree files: " + dirForTreeFiles);
         treeBeforePath = await createTreeFile(
             mainRepoDir,
             "tree-before.json",
@@ -172,7 +172,7 @@ export async function performTransformation(
             console,
         );
         for (const line of lines) {
-            console.log("   "+line.replaceAll("\n","\n   "));
+            console.log("   " + line.replaceAll("\n", "\n   "));
         }
     }
     console.log("");
@@ -181,7 +181,7 @@ export async function performTransformation(
             " migration branch:",
     );
     console.log(`   ${migrationBranchName}`);
-    
+
     if (deleteExistingBranches) {
         try {
             execFileSync("git", ["branch", "-D", migrationBranchName], {
@@ -300,9 +300,12 @@ export async function performTransformation(
 
     if (keepUntrackedFilesPath != null) {
         console.log("Unpacking all archives in " + keepUntrackedFilesPath);
-        const lines = await performUnpackAllArchives(keepUntrackedFilesPath, mainRepoDir);
+        const lines = await performUnpackAllArchives(
+            keepUntrackedFilesPath,
+            mainRepoDir,
+        );
         for (const line of lines) {
-            console.log("   "+line.replaceAll("\n","\n   "));
+            console.log("   " + line.replaceAll("\n", "\n   "));
         }
     }
 

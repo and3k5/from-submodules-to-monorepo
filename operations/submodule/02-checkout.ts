@@ -14,7 +14,9 @@ export function checkoutModule(
                 cwd: fullPath,
                 stdio: "ignore",
             });
-            console.log("      Deleted existing branch: " + migrationBranchName);
+            console.log(
+                "      Deleted existing branch: " + migrationBranchName,
+            );
         } catch {
             // nothing
         }

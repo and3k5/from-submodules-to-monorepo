@@ -27,5 +27,3 @@ npm version minor|major
 ```bash
 npm pack
 ```
-
-

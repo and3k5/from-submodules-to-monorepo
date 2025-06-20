@@ -16,12 +16,11 @@ const mySystemDir = resolve(devDir, "my-system");
 
 export const mainRepoDir = mySystemDir;
 
-
 export async function createSubModules() {
     const remotes = await createRemotes();
 
     console.log("create submodules:");
-    console.log("  clean "+devDir);
+    console.log("  clean " + devDir);
     if (!existsSync(devDir)) {
         mkdirSync(devDir, { recursive: true });
     }
@@ -48,10 +47,7 @@ export async function createSubModules() {
     console.log("  add submodule change to my-system");
     for (const submoduleFolderName of submoduleNames) {
         console.log("   - " + submoduleFolderName);
-        gitAdd(
-            submoduleFolderName,
-            mySystemDir,
-        );
+        gitAdd(submoduleFolderName, mySystemDir);
     }
 
     console.log("  commit my-system");
