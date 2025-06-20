@@ -59,7 +59,7 @@ async function runSubmoduleUpdatesAndCheckout(
 
 const checkoutBranchThread: (
     ...args: Parameters<typeof checkoutBranch>
-) => Promise<string[]> = (path, branchNames, options, isSubmodule) => {
+) => Promise<string[]> = (path, branchNames, options, console, isSubmodule) => {
     return new Promise((resolve, reject) => {
         const worker = new Worker(
             /* webpackChunkName: "worker-checkout-branches" */
