@@ -403,6 +403,11 @@ if (require.main?.id === module.id) {
                 description:
                     "Create tree files to compare before and after.\nOverwritten when using --create-report.",
             },
+            keepUntrackedFiles: {
+                identifier: "--keep-untracked-files",
+                description:
+                    "Keep all untracked files after transformation.\nArchives will be stored in a temporary directory and then restored after the transformation.",
+            },
         },
         values: {
             repoDir: {
@@ -447,6 +452,7 @@ if (require.main?.id === module.id) {
     const resetWithMasterOrMainBranches = flags.resetWithMasterOrMainBranches;
     const deleteExistingBranches = flags.deleteExistingBranches;
     const createReport = flags.createReport;
+    const keepUntrackedFiles = flags.keepUntrackedFiles;
     const createTreeFiles = flags.createTreeFiles;
     const noThreads = flags.noThreads;
     const pullRemotes = flags.pullRemotes;
@@ -503,5 +509,6 @@ if (require.main?.id === module.id) {
         nukeRemote,
         createReport,
         createTreeFiles,
+        keepUntrackedFiles,
     });
 }
