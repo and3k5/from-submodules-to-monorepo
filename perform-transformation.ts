@@ -298,6 +298,14 @@ export async function performTransformation(
         );
     }
 
+    if (keepUntrackedFilesPath != null) {
+        console.log("Unpacking all archives in " + keepUntrackedFilesPath);
+        const lines = await performUnpackAllArchives(keepUntrackedFilesPath, mainRepoDir);
+        for (const line of lines) {
+            console.log("   "+line.replaceAll("\n","\n   "));
+        }
+    }
+
     if (dirForTreeFiles != null) {
         console.log(
             "Creating tree file after transformation to " + dirForTreeFiles,
@@ -307,14 +315,6 @@ export async function performTransformation(
             "tree-after.json",
             dirForTreeFiles,
         );
-    }
-
-    if (keepUntrackedFilesPath != null) {
-        console.log("Unpacking all archives in " + keepUntrackedFilesPath);
-        const lines = await performUnpackAllArchives(keepUntrackedFilesPath, mainRepoDir);
-        for (const line of lines) {
-            console.log("   "+line.replaceAll("\n","\n   "));
-        }
     }
 
     console.log("Transformation finished!");
