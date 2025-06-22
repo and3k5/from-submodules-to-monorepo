@@ -63,6 +63,14 @@ This script is highly experimental and may cause irreversible damage, including 
 
 You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that this might cause irreversible damage.
 
+## Example usage
+
+```bash
+npx from-submodules-to-monorepo --keep-untracked-files --reset-with-master-or-main-branches --delete-existing-branches /home/user/dev/my-very-huge-project transform-repository
+```
+
+*Note: I left out the `--acknowledge-risks-and-continue` to prevent a copy paste ending up ruining someones life*
+
 # Development
 
 ## Testing
