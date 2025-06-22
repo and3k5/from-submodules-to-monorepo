@@ -1,4 +1,4 @@
-const { getVersion } = require("./get-version");
+const { getVersion } = require("../../utils/version/get-version");
 
 var version = "v" + getVersion();
 const command =

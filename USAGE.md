@@ -56,6 +56,10 @@ This script is highly experimental and may cause irreversible damage, including 
             <code style="color: rgb(0, 204, 0);">Create tree files to compare before and after.
             Overwritten when using --create-report.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
+        <code style="color: rgb(204, 204, 0);">--keep-untracked-files</code>
+            <code style="color: rgb(0, 204, 0);">Keep all untracked files after transformation.
+            Archives will be stored in a temporary directory and then restored after the transformation.</code>
+            <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
 
 </pre>
 
