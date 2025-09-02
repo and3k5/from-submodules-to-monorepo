@@ -67,7 +67,7 @@ const escapeHtml = (unsafe) => {
 readmeContent.splice(
     beginReplacementIndex,
     0,
-    ...["<pre>", ...ansiToHtml(output).split("\n"), "</pre>"],
+    "<pre>", ...ansiToHtml(output).split("\n"), "</pre>",
 );
 
 /**
