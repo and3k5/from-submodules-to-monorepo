@@ -12,8 +12,14 @@
         "test-env-data": true,
         "**/package-lock.json": true
     },
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    "editor.formatOnSave": true,
     "files.exclude": {
         "**/node_modules": true,
         "**/typings": true
-    }
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "oxc.enable": true
 }
