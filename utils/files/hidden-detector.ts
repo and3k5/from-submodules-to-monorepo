@@ -67,7 +67,7 @@ export async function createHiddenDetector(
     return (path) => basename(path)[0] === ".";
 }
 
-if (require.main?.id === module.id) {
+if (import.meta.main) {
     const argsConfig = createConfig({
         flags: {
             outputAllEntries: {

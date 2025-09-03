@@ -59,6 +59,6 @@ export async function createRemotes() {
     return results.map((x) => x.name);
 }
 
-if (require.main?.id === module.id) {
+if (import.meta.main) {
     createRemotes();
 }

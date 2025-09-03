@@ -68,7 +68,7 @@ function showUsage() {
     );
 }
 
-if (require.main?.id === module.id) {
+if (import.meta.main) {
     const argsLeftOver = process.argv.slice(2);
     const acknowledged = pullFlag(
         argsLeftOver,

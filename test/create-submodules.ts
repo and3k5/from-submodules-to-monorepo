@@ -61,6 +61,6 @@ export async function createSubModules() {
     return mySystemDir;
 }
 
-if (require.main?.id === module.id) {
+if (import.meta.main) {
     createSubModules();
 }
