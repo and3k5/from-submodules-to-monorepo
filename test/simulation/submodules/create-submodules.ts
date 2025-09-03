@@ -1,6 +1,6 @@
 import { platform } from "os";
-import { run } from "../../utils/process/run";
-import { gitRemoteBase } from "../globals";
+import { run } from "../../../utils/process/run";
+import { gitRemoteBase } from "../../globals";
 import { gitAdd } from "../utils/git/git-add";
 import { gitCommit } from "../utils/git/git-commit";
 import { resolve } from "path";

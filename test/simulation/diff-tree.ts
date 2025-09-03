@@ -1,5 +1,5 @@
-import { flattenTreeToList } from "../transformation/create-tree-file";
-import { FileTreeItem } from "../utils/files/file-tree";
+import { flattenTreeToList } from "../../transformation/create-tree-file";
+import { FileTreeItem } from "../../utils/files/file-tree";
 
 export function diff(beforeTree: FileTreeItem, afterTree: FileTreeItem) {
     const beforeList = flattenTreeToList(beforeTree, "/")!;

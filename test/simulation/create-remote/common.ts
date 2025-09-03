@@ -1,13 +1,13 @@
-import { createFileSystemRemote } from "../../utils/git/create-file-system-remote";
-import { run } from "../../utils/process/run";
+import { createFileSystemRemote } from "../../../utils/git/create-file-system-remote";
+import { run } from "../../../utils/process/run";
 import { createFile } from "../utils/fs/create-file";
 import { cloneRepo } from "../utils/git/clone-repo";
 import { gitAdd } from "../utils/git/git-add";
 import { gitCommit } from "../utils/git/git-commit";
 import { gitPush } from "../utils/git/git-push";
-import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { ConsoleBase } from "../../../utils/output/console-wrapper";
 import { resolve } from "path";
-import { testOutDir } from "../globals";
+import { testOutDir } from "../../globals";
 
 const remoteDir = resolve(testOutDir, "remote");
 

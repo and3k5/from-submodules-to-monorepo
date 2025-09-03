@@ -1,5 +1,5 @@
 import { resolve } from "path";
-import { run } from "../../../utils/process/run";
+import { run } from "../../../../utils/process/run";
 import { remotePath } from "./remote-path";
 
 export function cloneRepo(reponame: string, dir: string) {

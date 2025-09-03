@@ -1,4 +1,4 @@
-import { run } from "../../../utils/process/run";
+import { run } from "../../../../utils/process/run";
 
 export function gitPush(remoteName, branchName, dir, setUpstream = false) {
     run(

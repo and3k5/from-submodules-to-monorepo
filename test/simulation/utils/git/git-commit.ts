@@ -1,4 +1,4 @@
-import { run } from "../../../utils/process/run";
+import { run } from "../../../../utils/process/run";
 
 export function gitCommit(message, dir) {
     run("git", ["commit", "-m", message], {

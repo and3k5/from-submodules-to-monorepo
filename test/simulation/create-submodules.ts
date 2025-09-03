@@ -2,13 +2,13 @@
 import { existsSync, mkdirSync } from "fs";
 import { resolve } from "path";
 import { createRemotes } from "./create-remotes";
-import { run } from "../utils/process/run";
+import { run } from "../../utils/process/run";
 import { cloneRepo } from "./utils/git/clone-repo";
 import { gitAdd } from "./utils/git/git-add";
 import { gitPush } from "./utils/git/git-push";
 import { gitCommit } from "./utils/git/git-commit";
 import { cleanWithRetries } from "./utils/fs/clean-with-retries";
-import { testOutDir } from "./globals";
+import { testOutDir } from "../globals";
 import { createSubmodules } from "./submodules/create-submodules";
 
 const devDir = resolve(testOutDir, "dev");

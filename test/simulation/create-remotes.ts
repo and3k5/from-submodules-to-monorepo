@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { getSubmodules } from "./submodules/test-submodules";
 import { cleanWithRetries } from "./utils/fs/clean-with-retries";
 import { createRemoteThread } from "./create-remote";
-import { testOutDir } from "./globals";
+import { testOutDir } from "../globals";
 import { Submodule } from "./submodules";
 
 const remoteDir = resolve(testOutDir, "remote");

@@ -1,5 +1,5 @@
 import { isMainThread, parentPort, workerData } from "worker_threads";
-import { createConsoleWrapper } from "../../utils/output/console-wrapper";
+import { createConsoleWrapper } from "../../../utils/output/console-wrapper";
 import { createRemote } from "./common";
 
 if (!isMainThread) {
