@@ -7,9 +7,10 @@ export function cleanWithRetries(
 ) {
     try {
         cleanDirSync(dir, exclude);
+        console.log("    done!");
     } catch (e) {
         if ((e.code == "ENOTEMPTY" || e.code == "EBUSY") && attempts > 0) {
-            console.log("  retrying clean dir");
+            console.log("    retrying ...");
             cleanWithRetries(dir, exclude, attempts - 1);
         } else {
             throw e;
