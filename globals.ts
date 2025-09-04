@@ -1,5 +1,7 @@
 declare global {
-    const __VERSION__: string;
+    export interface globalThis {
+        __VERSION__: string;
+    }
 }
 
 export {};

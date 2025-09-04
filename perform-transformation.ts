@@ -137,7 +137,8 @@ export async function performTransformation(
     }
 
     console.log("from-submodules-to-monorepo");
-    console.log("   version: " + __VERSION__);
+    if ("__VERSION__" in globalThis)
+        console.log("   version: " + globalThis.__VERSION__);
     console.log("");
     console.log("Going to perform transformation:");
     console.log(`   Directory: ${process.cwd()}`);
@@ -445,7 +446,9 @@ if (import.meta.main) {
         process.exit(0);
     }
     if (flags.version) {
-        console.log("from-submodules-to-monorepo version: " + __VERSION__);
+        console.log(
+            "from-submodules-to-monorepo version: " + globalThis.__VERSION__,
+        );
         process.exit(0);
     }
     const acknowledged = flags.acknowledged;
