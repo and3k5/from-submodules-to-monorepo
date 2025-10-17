@@ -13,6 +13,7 @@ export function performUnpackAllArchives(
             /* webpackChunkName: "worker-perform-unpack-archives" */
             new URL("./thread-worker.ts", import.meta.url) as NodeURL,
             {
+                name: "worker-perform-unpack-archives",
                 workerData: {
                     keepUntrackedFilesPath,
                     mainRepoDir,

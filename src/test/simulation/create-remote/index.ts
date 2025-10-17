@@ -26,6 +26,7 @@ export const createRemoteThread: (
             /* webpackChunkName: "test_worker-create-remote" */
             new URL("./thread-worker.ts", import.meta.url) as NodeURL,
             {
+                name: "test_worker-create-remote",
                 workerData: {
                     tempDir,
                     moduleName,

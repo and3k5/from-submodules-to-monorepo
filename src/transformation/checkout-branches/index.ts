@@ -65,6 +65,7 @@ const checkoutBranchThread: (
             /* webpackChunkName: "worker-checkout-branches" */
             new URL("./thread-worker.ts", import.meta.url) as NodeURL,
             {
+                name: "worker-checkout-branches",
                 workerData: {
                     path,
                     branchNames,

@@ -19,6 +19,7 @@ export function applyTransformationForSubmodule(
             /* webpackChunkName: "worker-apply-transformation" */
             new URL("./thread-worker.ts", import.meta.url) as NodeURL,
             {
+                name: "worker-apply-transformation",
                 workerData: {
                     fullPath,
                     submodule,
