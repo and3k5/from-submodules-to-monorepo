@@ -3,5 +3,5 @@
  * @returns {string} The version of the package
  */
 module.exports.getVersion = function () {
-    return require("../../package.json").version;
+    return require("../../../package.json").version;
 };

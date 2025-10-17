@@ -1,5 +1,5 @@
 import { createSubModules } from "./create-submodules";
-import { performTransformation } from "../../perform-transformation";
+import { performTransformation } from "../../index";
 import { readFileSync } from "fs";
 import { pullFlag } from "../../utils/args/pull-flag";
 import { diff } from "./diff-tree";

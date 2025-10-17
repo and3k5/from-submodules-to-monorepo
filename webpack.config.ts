@@ -1,6 +1,6 @@
 import path from "path";
 import webpack from "webpack";
-import { getVersion } from "./utils/version/get-version";
+import { getVersion } from "./src/utils/version/get-version";
 // in case you run into any typescript error when configuring `devServer`
 //import "webpack-dev-server";
 
@@ -9,11 +9,11 @@ const config: webpack.Configuration = {
     mode: "production",
     entry: {
         "perform-transformation": {
-            import: "./perform-transformation.ts",
+            import: "./src/index.ts",
             filename: "perform-transformation.js",
         },
         test: {
-            import: "./test/index.ts",
+            import: "./src/test/index.ts",
             filename: "test.js",
         },
     },
