@@ -1,0 +1,29 @@
+services:
+    test-runner:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            TEST_SHOULD_PASS: "true" # set to "false" to make the test fail
+        working_dir: /workspace
+        volumes:
+            - ./:/workspace:ro
+        command: |
+            /bin/bash -lc "set -euo pipefail
+            cat > /tmp/test.sh <<'EOF'
+            #!/usr/bin/env bash
+            set -euo pipefail
+            echo \"Running tests...\"
+            /workspace/config-git.sh
+            /workspace/test-a.sh
+            if [ \"${TEST_SHOULD_PASS:-true}\" = \"true\" ]; then
+              echo \"Tests passed\"
+              exit 0
+            else
+              echo \"Tests failed\" >&2
+              exit 1
+            fi
+            EOF
+            chmod +x /tmp/test.sh
+            /tmp/test.sh
+            "

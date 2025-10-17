@@ -9,6 +9,7 @@
     "directories": {},
     "scripts": {
         "test": "npm run build:dev -- --devtool source-map && node dist/test --enable-colors",
+        "test:docker": "npm run internal:build:prod:compile && cp ./fstm test/fstm && docker compose -f test/docker-compose.yml run test-runner",
         "format": "prettier . --write",
         "lint": "run-s lint:*",
         "lint:oxlint": "oxlint . --fix -D correctness --ignore-path .gitignore",
@@ -18,6 +19,7 @@
         "start": "node dist/perform-transformation.js",
         "build:dev": "npx webpack --mode development",
         "build:prod": "npx webpack --mode production",
+        "internal:build:prod:compile": "bun build ./src/index.ts --compile --outfile fstm",
         "routines:update-docs": "npm run routines:update-docs:cmd-line-usage",
         "routines:update-docs:cmd-line-usage": "node routines/documentation/update-readme-command-line-usage.mjs",
         "routines:versioning:read-version": "node routines/versioning/read-version.js"
@@ -33,6 +35,7 @@
         "@types/bun": "^1.2.21",
         "@types/node": "^22.14.1",
         "@types/webpack": "^5.28.5",
+        "bun": "^1.3.0",
         "eslint": "^9.24.0",
         "eslint-config-prettier": "^10.1.2",
         "eslint-plugin-jsdoc": "^50.6.9",
