@@ -1,12 +1,12 @@
+import { execFileSync } from "child_process";
 import { autoResolveConflicts } from "../../transformation/auto-resolve-conflicts";
 import { createFileSystemRemote } from "../../utils/git/create-file-system-remote";
 import { fileSystemRemoteUrl } from "../../utils/git/file-system-remote-url";
-import { run } from "../../utils/process/run";
-import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
 import { getOriginNameForSubmodule } from "../../utils/git/origin-name-for-submodule";
-import { execFileSync } from "child_process";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { run } from "../../utils/process/run";
+import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
 
 export async function pullSubmoduleToMainRepo(
     mainRepoDir: string,

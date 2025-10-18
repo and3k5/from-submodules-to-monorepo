@@ -1,12 +1,12 @@
-import { existsSync, renameSync, mkdirSync } from "fs";
-import { relative, join, basename } from "path";
-import { run } from "../../utils/process/run";
-import { sameDirName } from "../../utils/path/same-dir-name";
-import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
-import { platform } from "os";
 import { execFileSync } from "child_process";
+import { existsSync, mkdirSync, renameSync } from "fs";
+import { platform } from "os";
+import { basename, join, relative } from "path/posix";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
+import { sameDirName } from "../../utils/path/same-dir-name";
+import { run } from "../../utils/process/run";
 
 export function moveFiles(
     mainRepoDir: string,

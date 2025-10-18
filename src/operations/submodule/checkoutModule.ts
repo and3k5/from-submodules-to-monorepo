@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
-import { run } from "../../utils/process/run";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { run } from "../../utils/process/run";
 
 export function checkoutModule(
     fullPath: string,

@@ -1,9 +1,9 @@
 import { execFileSync } from "child_process";
-import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
-import { run } from "../../utils/process/run";
-import { basename, join } from "path";
+import { basename, join } from "path/posix";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
+import { run } from "../../utils/process/run";
 
 export async function removeSubmodule(
     mainRepoDir: string,

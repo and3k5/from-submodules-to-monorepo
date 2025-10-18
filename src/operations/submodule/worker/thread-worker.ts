@@ -1,10 +1,10 @@
 import { parentPort, workerData, isMainThread } from "worker_threads";
-import { introduceModule } from "../01-intro";
-import { checkoutModule } from "../02-checkout";
-import { moveFiles } from "../04-move-files";
+import { introduceModule } from "../introduceModule";
+import { checkoutModule } from "../checkoutModule";
+import { moveFiles } from "../moveFiles";
 import { createConsoleWrapper } from "../../../utils/output/console-wrapper";
-import { pushToOrigin } from "../05-push-to-origin";
-import { archiveUntrackedFiles } from "../03-archive-untracked";
+import { pushToOrigin } from "../pushToOrigin";
+import { archiveUntrackedFiles } from "../archiveUntrackedFiles";
 
 if (!isMainThread) {
     const fullPath = workerData.fullPath;

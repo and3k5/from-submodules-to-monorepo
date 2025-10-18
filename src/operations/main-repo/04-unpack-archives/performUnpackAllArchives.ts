@@ -1,33 +1,22 @@
-import { Worker, isMainThread } from "worker_threads";
 import { URL as NodeURL } from "url";
-import { Submodule } from "../../../utils/git/read-gitmodules";
+import { isMainThread, Worker } from "worker_threads";
 
-export function applyTransformationForSubmodule(
+export function performUnpackAllArchives(
+    keepUntrackedFilesPath: string,
     mainRepoDir: string,
-    migrationBranchName: string,
-    fullPath: string,
-    submodule: Submodule,
-    submodules: Submodule[],
-    deleteExistingBranches: boolean,
-    keepUntrackedFilesPath: string | undefined,
 ): Promise<string[]> {
     if (!isMainThread) {
         throw new Error("Should not be used inside thread");
     }
     return new Promise((resolve, reject) => {
         const worker = new Worker(
-            /* webpackChunkName: "worker-apply-transformation" */
+            /* webpackChunkName: "worker-perform-unpack-archives" */
             new URL("./thread-worker.ts", import.meta.url) as NodeURL,
             {
-                name: "worker-apply-transformation",
+                name: "worker-perform-unpack-archives",
                 workerData: {
-                    fullPath,
-                    submodule,
-                    submodules,
-                    migrationBranchName,
-                    mainRepoDir,
-                    deleteExistingBranches,
                     keepUntrackedFilesPath,
+                    mainRepoDir,
                 },
             },
         );

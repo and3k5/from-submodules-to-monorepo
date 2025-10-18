@@ -4,9 +4,9 @@ import { resolve, join, relative, parse } from "path";
 import { run } from "./utils/process/run";
 import { readGitmodules, Submodule } from "./utils/git/read-gitmodules";
 import { cwd } from "process";
-import { removeSubmodule } from "./operations/main-repo/01-remove-submodule";
-import { pullSubmoduleToMainRepo } from "./operations/main-repo/02-pull-submodule-to-main-repo";
-import { applyTransformationForSubmodule } from "./operations/submodule/worker";
+import { removeSubmodule } from "./operations/main-repo/removeSubmodule";
+import { pullSubmoduleToMainRepo } from "./operations/main-repo/pullSubmoduleToMainRepo";
+import { applyTransformationForSubmodule } from "./operations/submodule/worker/applyTransformationForSubmodule";
 import { whileIndexLock } from "./utils/git/while-index-lock";
 import { ensureSameCaseForPath } from "./utils/path/ensure-same-case-for-path";
 import { checkoutBranches } from "./transformation/checkout-branches";
@@ -16,7 +16,7 @@ import { mkdir } from "fs/promises";
 import { createConfig, getCommandValues } from "./utils/args/command-config";
 import { execFileSync } from "child_process";
 import { createTempDir } from "./utils/storage/create-temp-dir";
-import { performUnpackAllArchives } from "./operations/main-repo/04-unpack-archives";
+import { performUnpackAllArchives } from "./operations/main-repo/04-unpack-archives/performUnpackAllArchives";
 
 interface PerformTransformationOptions {
     /** Branch name to create for the migration */

@@ -2,10 +2,10 @@ import { execFileSync } from "child_process";
 import { createFileSystemRemote } from "../../utils/git/create-file-system-remote";
 import { fileSystemRemoteUrl } from "../../utils/git/file-system-remote-url";
 import { getOriginNameForSubmodule } from "../../utils/git/origin-name-for-submodule";
-import { run } from "../../utils/process/run";
-import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
+import { run } from "../../utils/process/run";
+import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
 
 export function pushToOrigin(
     mainRepoDir: string,

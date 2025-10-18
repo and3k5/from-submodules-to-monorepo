@@ -1,9 +1,9 @@
-import { basename, relative, resolve } from "path";
+import { existsSync } from "fs";
+import { basename, relative, resolve } from "path/posix";
+import { create } from "tar";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
 import { run } from "../../utils/process/run";
-import { create } from "tar";
-import { existsSync } from "fs";
 
 export async function archiveUntrackedFiles(
     mainRepoDir: string,
