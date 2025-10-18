@@ -1,135 +1,15 @@
 import { cwd } from "process";
-import { readGitmodules } from "../../utils/git/read-gitmodules";
-import { resolve, relative, join } from "path";
+import { relative } from "path";
 import { existsSync } from "fs";
-import { isMainThread, Worker } from "worker_threads";
-import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { prettyFormatCommandUsage } from "../../utils/args/pretty-format-command-usage";
 import { cpus } from "os";
-import { URL as NodeURL } from "url";
-import { execFileSync } from "child_process";
 import {
     createConfig,
     getCommandValues,
 } from "../../utils/args/command-config";
-import { checkoutBranch, CheckoutBranchesOptions } from "./common";
+import { checkoutBranches } from "./checkoutBranches";
 
-const cpuThreadCount = cpus().length;
-
-async function runSubmoduleUpdatesAndCheckout(
-    path: string,
-    branchNames: string | string[],
-    options: CheckoutBranchesOptions,
-): Promise<string[]> {
-    const gitModulesPath = join(path, ".gitmodules");
-    if (!existsSync(gitModulesPath)) {
-        return [];
-    }
-    execFileSync(
-        "git",
-        [
-            "submodule",
-            "update",
-            "--jobs",
-            cpuThreadCount.toString(),
-            ...(options.pullRemotes === true ? ["--remote"] : []),
-        ],
-        { cwd: path, stdio: "ignore" },
-    );
-
-    const subModuleTasks: ReturnType<typeof checkoutBranches>[] = [];
-    for (const gitmodule of readGitmodules(gitModulesPath)) {
-        if (gitmodule.path == null) continue;
-        const moduleName = gitmodule.path;
-        const modulePath = resolve(path, moduleName);
-        const task = checkoutBranches(
-            modulePath,
-            branchNames,
-            options,
-            console,
-            true,
-        );
-        if (options.noThreads === true) {
-            await task;
-        }
-        subModuleTasks.push(task);
-    }
-    return (await Promise.all(subModuleTasks)).flatMap((x) => x);
-}
-
-const checkoutBranchThread: (
-    ...args: Parameters<typeof checkoutBranch>
-) => Promise<string[]> = (path, branchNames, options, console, isSubmodule) => {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(
-            /* webpackChunkName: "worker-checkout-branches" */
-            new URL("./thread-worker.ts", import.meta.url) as NodeURL,
-            {
-                name: "worker-checkout-branches",
-                workerData: {
-                    path,
-                    branchNames,
-                    pullRemotes: options.pullRemotes,
-                    isSubmodule: isSubmodule,
-                },
-            },
-        );
-
-        worker.on("message", resolve);
-        worker.on("error", (reason) => {
-            reject(reason);
-        });
-        worker.on("exit", (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code: ${code}`));
-            }
-        });
-    });
-};
-
-export async function checkoutBranches(
-    path: string,
-    branchNames: string[] | string,
-    options: CheckoutBranchesOptions,
-    console: ConsoleBase,
-    isSubmodule?: boolean | undefined,
-): Promise<string[]> {
-    console.log("Run queue for " + path);
-
-    let checkoutBranchResult: string[];
-    if (options.noThreads !== true)
-        checkoutBranchResult = await checkoutBranchThread(
-            path,
-            branchNames,
-            options,
-            console,
-            isSubmodule === true,
-        );
-    else {
-        await checkoutBranch(
-            path,
-            branchNames,
-            options,
-            console,
-            isSubmodule === true,
-        );
-        checkoutBranchResult =
-            "contents" in console && Array.isArray(console.contents)
-                ? console.contents
-                : [];
-    }
-
-    const { noSubmoduleUpdate } = options;
-    if (noSubmoduleUpdate) return checkoutBranchResult;
-
-    const otherBranchResult = await runSubmoduleUpdatesAndCheckout(
-        path,
-        branchNames,
-        options,
-    );
-    const lines = [checkoutBranchResult, otherBranchResult].flatMap((x) => x);
-    return lines;
-}
+export const cpuThreadCount = cpus().length;
 
 function getCommandLine() {
     const nodeName = process.argv0;
@@ -182,9 +62,7 @@ const argsConfig = createConfig({
     },
 });
 
-if (!isMainThread) {
-    throw new Error("Should not be used in worker thread");
-} else if (import.meta.main) {
+if (import.meta.main) {
     const showUsage = function () {
         console.log(prettyFormatCommandUsage(getCommandLine(), argsConfig));
     };

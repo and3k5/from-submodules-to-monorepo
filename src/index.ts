@@ -9,7 +9,7 @@ import { pullSubmoduleToMainRepo } from "./operations/main-repo/pullSubmoduleToM
 import { applyTransformationForSubmodule } from "./operations/submodule/worker/applyTransformationForSubmodule";
 import { whileIndexLock } from "./utils/git/while-index-lock";
 import { ensureSameCaseForPath } from "./utils/path/ensure-same-case-for-path";
-import { checkoutBranches } from "./transformation/checkout-branches";
+import { checkoutBranches } from "./transformation/checkout-branches/checkoutBranches";
 import { prettyFormatCommandUsage } from "./utils/args/pretty-format-command-usage";
 import { createTreeFile } from "./transformation/create-tree-file";
 import { mkdir } from "fs/promises";

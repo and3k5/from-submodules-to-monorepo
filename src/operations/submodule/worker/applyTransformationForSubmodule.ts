@@ -1,8 +1,12 @@
-import { URL as NodeURL } from "url";
-import { isMainThread, Worker } from "worker_threads";
+import { introduceModule } from "../introduceModule";
+import { checkoutModule } from "../checkoutModule";
+import { moveFiles } from "../moveFiles";
+import { createConsoleWrapper } from "../../../utils/output/console-wrapper";
+import { pushToOrigin } from "../pushToOrigin";
+import { archiveUntrackedFiles } from "../archiveUntrackedFiles";
 import { Submodule } from "../../../utils/git/read-gitmodules";
 
-export function applyTransformationForSubmodule(
+export async function applyTransformationForSubmodule(
     mainRepoDir: string,
     migrationBranchName: string,
     fullPath: string,
@@ -11,35 +15,31 @@ export function applyTransformationForSubmodule(
     deleteExistingBranches: boolean,
     keepUntrackedFilesPath: string | undefined,
 ): Promise<string[]> {
-    if (!isMainThread) {
-        throw new Error("Should not be used inside thread");
-    }
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(
-            /* webpackChunkName: "worker-apply-transformation" */
-            new URL("./thread-worker.ts", import.meta.url) as NodeURL,
-            {
-                name: "worker-apply-transformation",
-                workerData: {
-                    fullPath,
-                    submodule,
-                    submodules,
-                    migrationBranchName,
-                    mainRepoDir,
-                    deleteExistingBranches,
-                    keepUntrackedFilesPath,
-                },
-            },
-        );
+    const console = createConsoleWrapper();
 
-        worker.on("message", resolve);
-        worker.on("error", (reason) => {
-            reject(reason);
-        });
-        worker.on("exit", (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code: ${code}`));
-            }
-        });
-    });
+    introduceModule(submodule, submodules, console);
+    checkoutModule(
+        fullPath,
+        migrationBranchName,
+        deleteExistingBranches,
+        console,
+    );
+    if (keepUntrackedFilesPath != null)
+        await archiveUntrackedFiles(
+            mainRepoDir,
+            fullPath,
+            submodule,
+            keepUntrackedFilesPath,
+            console,
+        );
+    moveFiles(mainRepoDir, fullPath, submodule, console);
+    pushToOrigin(
+        mainRepoDir,
+        fullPath,
+        migrationBranchName,
+        submodule,
+        console,
+    );
+
+    return console.contents;
 }

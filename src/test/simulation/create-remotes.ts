@@ -3,9 +3,9 @@ import { mkdirSync, rmSync, existsSync } from "fs";
 import { resolve } from "path";
 import { getSubmodules } from "./submodules/test-submodules";
 import { cleanWithRetries } from "./utils/fs/clean-with-retries";
-import { createRemoteThread } from "./create-remote";
 import { testOutDir } from "../globals";
 import { Submodule } from "./submodules";
+import { createRemote } from "./createRemote";
 
 const remoteDir = resolve(testOutDir, "remote");
 
@@ -37,18 +37,14 @@ export async function createRemotes() {
                 },
         )
         .concat([{ submodule: false, name: "my-system", src: null }])) {
-        const createRemoteTask = createRemoteThread(
+        createRemote(
             tempDir,
             module.name,
             module.submodule,
             module.src?.customReadMeName,
-        ).then((contents) => {
-            console.log(contents.join("\n"));
-            return {
-                name: module.name,
-            };
-        });
-        createRemoteTasks.push(createRemoteTask);
+            console,
+        );
+        createRemoteTasks.push(Promise.resolve({ name: module.name }));
     }
     const results = await Promise.all(createRemoteTasks);
 

@@ -9,7 +9,7 @@ export async function checkoutBranch(
     options: CheckoutBranchesOptions,
     console: ConsoleBase,
     isSubmodule: boolean,
-): Promise<void> {
+): Promise<void | string[]> {
     if (typeof branchNames === "string") {
         branchNames = [branchNames];
     }
@@ -66,6 +66,9 @@ export async function checkoutBranch(
             cwd: path,
             encoding: "utf-8",
         });
+    }
+    if ("contents" in console && Array.isArray(console.contents)) {
+        return console.contents;
     }
 }
 export interface CheckoutBranchesOptions {

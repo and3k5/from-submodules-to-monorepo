@@ -1,34 +1,59 @@
-import { URL as NodeURL } from "url";
-import { isMainThread, Worker } from "worker_threads";
+import { createConsoleWrapper } from "../../../utils/output/console-wrapper";
+import { existsSync, readdirSync } from "fs";
+import { join } from "path";
+import { extract, list } from "tar";
 
-export function performUnpackAllArchives(
+export async function performUnpackAllArchives(
     keepUntrackedFilesPath: string,
     mainRepoDir: string,
 ): Promise<string[]> {
-    if (!isMainThread) {
-        throw new Error("Should not be used inside thread");
-    }
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(
-            /* webpackChunkName: "worker-perform-unpack-archives" */
-            new URL("./thread-worker.ts", import.meta.url) as NodeURL,
-            {
-                name: "worker-perform-unpack-archives",
-                workerData: {
-                    keepUntrackedFilesPath,
-                    mainRepoDir,
-                },
-            },
-        );
+    const console = createConsoleWrapper();
 
-        worker.on("message", resolve);
-        worker.on("error", (reason) => {
-            reject(reason);
+    const files = readdirSync(keepUntrackedFilesPath).filter((file) =>
+        file.endsWith(".tar.gz"),
+    );
+
+    if (files.length === 0) {
+        console.log("No tar files found in the specified directory.");
+        return console.contents;
+    }
+    for (const file of files) {
+        const filePath = join(keepUntrackedFilesPath, file);
+        console.log(`Extracting ${filePath} to ${mainRepoDir}`);
+        const pathsToCheck: string[] = [];
+        await list({
+            file: filePath,
+            onReadEntry: (entry) => {
+                pathsToCheck.push(entry.path);
+            },
         });
-        worker.on("exit", (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code: ${code}`));
+        for (const pathToCheck of pathsToCheck) {
+            const actualPath = join(mainRepoDir, pathToCheck);
+            if (existsSync(actualPath)) {
+                throw new Error(`File ${actualPath} should not exist`);
             }
+        }
+        await extract({
+            file: filePath,
+            cwd: mainRepoDir,
+            onReadEntry: (entry) => {
+                console.log(`Read entry ${entry.path}`);
+            },
+            onWriteEntry: (entry) => {
+                // this shouldn't be called
+                console.log(`Write entry ${entry.path}`);
+            },
         });
-    });
+        for (const pathToCheck of pathsToCheck) {
+            const actualPath = join(mainRepoDir, pathToCheck);
+            if (!existsSync(actualPath)) {
+                throw new Error(
+                    `Unpack of ${file} should result in a file to exist but it didn't. File path: ${actualPath}`,
+                );
+            }
+        }
+    }
+
+    console.log("All tar files have been extracted.");
+    return console.contents;
 }
