@@ -119,7 +119,13 @@ cd project-a
 echo " - Add submodules"
 
 git submodule add /home/dev/remotes/project-b project-b
+git add project-b
+git commit -m "Add project-b as submodule"
 git submodule add /home/dev/remotes/project-c project-c
+git add project-c
+git commit -m "Add project-c as submodule"
 git submodule add /home/dev/remotes/project-d project-d
+git add project-d
+git commit -m "Add project-d as submodule"
 
 /workspace/fstm --enable-colors --acknowledge-risks-and-continue --no-threads --keep-untracked-files /home/dev/project-a
