@@ -9,7 +9,7 @@ const config: webpack.Configuration = {
     mode: "production",
     entry: {
         "perform-transformation": {
-            import: "./src/index.ts",
+            import: "./src/cli.ts",
             filename: "perform-transformation.js",
         },
         test: {
