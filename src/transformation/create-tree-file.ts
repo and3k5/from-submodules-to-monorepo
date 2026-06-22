@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join, dirname } from "path";
 import {
     FileTreeItem,
     getFileTreeItems,
@@ -21,7 +21,7 @@ export async function createTreeFile(
     writeFileSync(join(location, filename), content, { encoding: "utf8" });
 
     if (fileTree) {
-        const content2 = flattenTreeToList(fileTree, dir)?.join("\n") ?? "";
+        const content2 = flattenTreeToList(fileTree, dirname(dir))?.join("\n") ?? "";
 
         writeFileSync(join(location, filename) + "_filelist.txt", content2, {
             encoding: "utf8",
@@ -56,4 +56,12 @@ export function flattenTreeToList(
         return result;
     }
     return undefined;
+}
+
+if (import.meta.main) {
+    const dir = process.argv[2];
+    const filename = process.argv[3];
+    const location = process.argv[4];
+    console.log(`Creating tree file for ${dir} at ${join(location, filename)}`);
+    createTreeFile(dir, filename, location).then((x) => console.log(x));
 }
