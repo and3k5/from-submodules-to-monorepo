@@ -45,7 +45,13 @@ export async function pullSubmoduleToMainRepo(
 
     run(
         "git",
-        ["fetch", "--no-auto-maintenance", remoteName, migrationBranchName],
+        [
+            "fetch",
+            "--no-auto-maintenance",
+            "--no-auto-gc",
+            remoteName,
+            migrationBranchName,
+        ],
         {
             cwd: mainRepoDir,
         },

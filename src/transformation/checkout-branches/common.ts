@@ -56,10 +56,14 @@ export async function checkoutBranch(
     if (options.pullRemotes === true) {
         if (isSubmodule) {
             console.log("  Merging changes from remote");
-            execFileSync("git", ["fetch", "--no-auto-maintenance"], {
-                cwd: path,
-                stdio: "ignore",
-            });
+            execFileSync(
+                "git",
+                ["fetch", "--no-auto-maintenance", "--no-auto-gc"],
+                {
+                    cwd: path,
+                    stdio: "ignore",
+                },
+            );
         }
         console.log("  Merging changes from remote");
         execFileSync("git", ["merge", "--ff-only"], {

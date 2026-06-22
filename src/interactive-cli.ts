@@ -97,10 +97,9 @@ export async function runInteractiveCli({
         true,
     );
     const pullRemotes = await askYesNo(`  Pull from remotes?`, false);
-    let noThreads = false;
+    const noThreads = await askYesNo(`    Disable parallelism?`, false);
     let nukeRemote = false;
     if (pullRemotes) {
-        noThreads = await askYesNo(`    Run without parallel threads?`, false);
         if (!noThreads) {
             nukeRemote = await askYesNo(`    Use nuke-remote mode?`, false);
         }

@@ -1,4 +1,5 @@
 import { createWriteStream } from "fs";
+import { setPriority } from "os";
 import { removeAllRegisteredRemotes } from "./utils/git/remote-registry";
 import { resolve, join, relative } from "path";
 import { run } from "./utils/process/run";
@@ -14,6 +15,10 @@ import { mkdir } from "fs/promises";
 import { execFileSync } from "child_process";
 import { createTempDir } from "./utils/storage/create-temp-dir";
 import { performUnpackAllArchives } from "./operations/main-repo/04-unpack-archives/performUnpackAllArchives";
+import {
+    concurrencyFromCpuUsage,
+    createConcurrentQueue,
+} from "./utils/process/concurrent-queue";
 
 interface PerformTransformationOptions {
     /** Branch name to create for the migration */
@@ -36,6 +41,14 @@ interface PerformTransformationOptions {
     createReport?: boolean;
     /** Keep all untracked files after transformation */
     keepUntrackedFiles?: boolean;
+    /**
+     * Target CPU usage as a fraction (0.0–1.0). Limits both the number of
+     * concurrent workers and enforces a duty-cycle sleep after each worker
+     * so the process uses approximately this fraction of total CPU time.
+     * Also lowers the OS scheduling priority proportionally.
+     * Defaults to 0.5 (50%). Use 1.0 for maximum throughput.
+     */
+    maxCpuUsage?: number;
 }
 
 interface TransformationResult {
@@ -57,6 +70,7 @@ export async function performTransformation(
         createTreeFiles,
         createReport,
         keepUntrackedFiles,
+        maxCpuUsage,
     }: PerformTransformationOptions,
 ): Promise<TransformationResult> {
     if (typeof mainRepoDir != "string")
@@ -66,6 +80,9 @@ export async function performTransformation(
         throw new Error("Migration branch name is required");
     if (migrationBranchName == "")
         throw new Error("Must have valid branch name");
+
+    let maintenanceAutoOriginalValue: string | null = null;
+    let maintenanceAutoDisabled = false;
 
     try {
         let dirForTreeFiles: string | null = null;
@@ -212,8 +229,34 @@ export async function performTransformation(
 
         const submodules = readGitmodules(join(mainRepoDir, ".gitmodules"));
 
+        const cpuUsage = maxCpuUsage ?? 0.5;
+        const concurrency = noThreads ? 1 : concurrencyFromCpuUsage(cpuUsage);
+        const queue = createConcurrentQueue(
+            concurrency,
+            noThreads ? 1.0 : cpuUsage,
+        );
+
+        // Lower OS scheduling priority so other applications stay responsive.
+        // Maps cpuUsage 1.0→0 (normal) down to 0.0→19 (lowest) via nice values.
+        try {
+            setPriority(Math.round((1 - cpuUsage) * 19));
+        } catch {
+            // Not available on all platforms; ignore.
+        }
+
         console.log(``);
-        console.log("Performing transformation:");
+        console.log(
+            `Performing transformation (concurrency: ${concurrency}, cpu: ${Math.round(cpuUsage * 100)}%):`,
+        );
+
+        let interrupted = false;
+        const sigintHandler = () => {
+            interrupted = true;
+            console.log(
+                "\nReceived interrupt signal. Waiting for active workers to finish, then exiting...",
+            );
+        };
+        process.once("SIGINT", sigintHandler);
 
         const workers: Promise<{
             submodule: Submodule;
@@ -234,15 +277,21 @@ export async function performTransformation(
                 resolve(mainRepoDir, submodule.path),
             );
             console.log("   Queued " + relative(mainRepoDir, fullPath));
-            const workerThread = applyTransformationForSubmodule(
-                mainRepoDir,
-                migrationBranchName,
-                fullPath,
-                submodule,
-                submodules,
-                deleteExistingBranches ?? false,
-                keepUntrackedFilesPath,
-            )
+            const workerThread = queue
+                .enqueue(async () => {
+                    if (interrupted) {
+                        throw new Error("Interrupted by user");
+                    }
+                    return applyTransformationForSubmodule(
+                        mainRepoDir,
+                        migrationBranchName,
+                        fullPath,
+                        submodule,
+                        submodules,
+                        deleteExistingBranches ?? false,
+                        keepUntrackedFilesPath,
+                    );
+                })
                 .then((logOutput) => ({
                     submodule,
                     logOutput,
@@ -267,15 +316,20 @@ export async function performTransformation(
                                 : ""),
                     );
                 });
-            if (noThreads) {
-                await workerThread;
-            }
             workers.push(workerThread);
         }
 
         console.log("Queued all workers. Waiting for all of them to finish...");
 
         const workerResults = await Promise.all(workers);
+
+        process.off("SIGINT", sigintHandler);
+
+        if (interrupted) {
+            throw new Error(
+                "Transformation interrupted by user (SIGINT). Some submodules may not have been processed.",
+            );
+        }
 
         if (workerResults.some((x) => x.success === false)) {
             for (const data of workerResults.filter(
@@ -285,6 +339,36 @@ export async function performTransformation(
                 console.error(data.error);
             }
             throw new Error("Some workers failed, stopping the process");
+        }
+
+        let currentMaintenanceAuto: string | null = null;
+        try {
+            currentMaintenanceAuto = execFileSync(
+                "git",
+                ["config", "--local", "maintenance.auto"],
+                { cwd: mainRepoDir, encoding: "utf8" },
+            ).trim();
+        } catch {
+            // Not set in local config
+        }
+        if (currentMaintenanceAuto !== "false") {
+            console.log("");
+            if (currentMaintenanceAuto !== null) {
+                console.log(
+                    `Disabling git maintenance.auto (was: "${currentMaintenanceAuto}")`,
+                );
+            } else {
+                console.log(
+                    "Disabling git maintenance.auto (was not set in local config)",
+                );
+            }
+            execFileSync(
+                "git",
+                ["config", "--local", "maintenance.auto", "false"],
+                { cwd: mainRepoDir },
+            );
+            maintenanceAutoOriginalValue = currentMaintenanceAuto;
+            maintenanceAutoDisabled = true;
         }
 
         for (const data of workerResults) {
@@ -341,6 +425,30 @@ export async function performTransformation(
 
         return result;
     } finally {
+        if (maintenanceAutoDisabled) {
+            try {
+                if (maintenanceAutoOriginalValue !== null) {
+                    execFileSync(
+                        "git",
+                        [
+                            "config",
+                            "--local",
+                            "maintenance.auto",
+                            maintenanceAutoOriginalValue,
+                        ],
+                        { cwd: mainRepoDir },
+                    );
+                } else {
+                    execFileSync(
+                        "git",
+                        ["config", "--local", "--unset", "maintenance.auto"],
+                        { cwd: mainRepoDir },
+                    );
+                }
+            } catch {
+                // Ignore errors during restoration
+            }
+        }
         removeAllRegisteredRemotes();
     }
 }

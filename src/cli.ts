@@ -92,6 +92,12 @@ const argsConfig = createConfig({
             description: "Name of the branch to create for the migration.",
             defaultValue: defaultMigrationBranchName,
         },
+        maxCpuUsage: {
+            identifier: "max-cpu-usage",
+            description:
+                "Target CPU usage as a fraction (0.0–1.0). Limits concurrency and throttles via duty-cycle sleeping so the process uses approximately this fraction of CPU. Defaults to 0.5 (50%).",
+            defaultValue: "0.5",
+        },
     },
 });
 
@@ -147,6 +153,9 @@ function colorsSupported(): boolean {
     const pullRemotes = flags.pullRemotes;
     const nukeRemote = flags.nukeRemote;
     const mainRepoDir = values.repoDir;
+    const maxCpuUsageRaw = values.maxCpuUsage;
+    const maxCpuUsage =
+        maxCpuUsageRaw != null ? parseFloat(maxCpuUsageRaw) : undefined;
 
     if (mainRepoDir == null) {
         console.error("Missing repo dir");
@@ -199,5 +208,6 @@ function colorsSupported(): boolean {
         createReport: !noReports,
         createTreeFiles,
         keepUntrackedFiles: !dontKeepUntrackedFiles,
+        maxCpuUsage,
     });
 })();
