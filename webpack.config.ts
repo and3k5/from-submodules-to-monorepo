@@ -16,6 +16,10 @@ const config: webpack.Configuration = {
             import: "./src/test/index.ts",
             filename: "test.js",
         },
+        status: {
+            import: "./src/status.ts",
+            filename: "status.js",
+        },
     },
     module: {
         rules: [
