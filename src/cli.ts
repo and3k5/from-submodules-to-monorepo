@@ -5,6 +5,7 @@ import { cwd } from "process";
 import { performTransformation } from "./index";
 import { prettyFormatCommandUsage } from "./utils/args/pretty-format-command-usage";
 import { createConfig, getCommandValues } from "./utils/args/command-config";
+import { runInteractiveCli } from "./interactive-cli";
 
 function getCommandLine() {
     const nodeName = process.argv0;
@@ -23,9 +24,9 @@ const argsConfig = createConfig({
             identifier: "--help",
             description: "Show this help message.",
         },
-        enableColors: {
-            identifier: "--enable-colors",
-            description: "Enable colors in the output.",
+        noColors: {
+            identifier: "--no-colors",
+            description: "Disable colors in the output.",
         },
         version: {
             identifier: "--version",
@@ -64,20 +65,20 @@ const argsConfig = createConfig({
             description:
                 "If any branch exist (<branch-name>) then delete them.",
         },
-        createReport: {
-            identifier: "--create-report",
+        noReports: {
+            identifier: "--no-reports",
             description:
-                "Create a report with the transformation output and tree files to compare before and after.",
+                "Don't create a report.\nBy default, a report with the transformation output and tree files to compare before and after is created.",
         },
         createTreeFiles: {
             identifier: "--create-tree-files",
             description:
-                "Create tree files to compare before and after.\nOverwritten when using --create-report.",
+                "Create tree files to compare before and after.\nOverwritten when using --no-reports.",
         },
-        keepUntrackedFiles: {
-            identifier: "--keep-untracked-files",
+        dontKeepUntrackedFiles: {
+            identifier: "--dont-keep-untracked-files",
             description:
-                "Keep all untracked files after transformation.\nArchives will be stored in a temporary directory and then restored after the transformation.",
+                "Don't keep untracked files after transformation.\nBy default, untracked files are archived and restored after the transformation.",
         },
     },
     values: {
@@ -94,88 +95,109 @@ const argsConfig = createConfig({
     },
 });
 
-const showUsage = function (enableColors: boolean) {
-    console.log(
-        prettyFormatCommandUsage(getCommandLine(), argsConfig, enableColors),
-    );
-};
-
-const argValues = getCommandValues(argsConfig, process.argv.slice(2));
-if (argValues == null) {
-    console.error("Invalid args");
-    showUsage(false);
-    process.exit(1);
-}
-const flags = argValues.flags;
-const values = argValues.values;
-if (flags.help) {
-    showUsage(flags.enableColors ?? false);
-    process.exit(0);
-}
-if (flags.version) {
-    console.log(
-        "from-submodules-to-monorepo version: " + globalThis.__VERSION__,
-    );
-    process.exit(0);
-}
-const acknowledged = flags.acknowledged;
-const resetWithMasterOrMainBranches = flags.resetWithMasterOrMainBranches;
-const deleteExistingBranches = flags.deleteExistingBranches;
-const createReport = flags.createReport;
-const keepUntrackedFiles = flags.keepUntrackedFiles;
-const createTreeFiles = flags.createTreeFiles;
-const noThreads = flags.noThreads;
-const pullRemotes = flags.pullRemotes;
-const nukeRemote = flags.nukeRemote;
-const mainRepoDir = values.repoDir;
-
-if (mainRepoDir == null) {
-    console.error("Missing repo dir");
-    showUsage(flags.enableColors ?? false);
-    process.exit(1);
+function colorsSupported(): boolean {
+    if (process.env.NO_COLOR !== undefined) return false;
+    if (process.env.FORCE_COLOR !== undefined) return true;
+    return process.stdout.isTTY === true;
 }
 
-let migrationBranchName = values.branchName;
+(async () => {
+    if (process.argv.slice(2).length === 0) {
+        await runInteractiveCli({ useColors: colorsSupported() });
+        return;
+    }
 
-if (migrationBranchName == null || migrationBranchName == "") {
-    migrationBranchName = defaultMigrationBranchName;
-}
-
-if (!existsSync(mainRepoDir)) {
-    throw new Error(`The directory does not exist: ${mainRepoDir}`);
-}
-
-if (pullRemotes) {
-    if (!nukeRemote && !noThreads) {
-        console.error("--pull-remotes requires --no-threads or --nuke-remote");
-        showUsage(flags.enableColors ?? false);
+    const argValues = getCommandValues(argsConfig, process.argv.slice(2));
+    if (argValues == null) {
+        console.error("Invalid args");
+        console.log(
+            prettyFormatCommandUsage(
+                getCommandLine(),
+                argsConfig,
+                colorsSupported(),
+            ),
+        );
         process.exit(1);
     }
-}
+    const flags = argValues.flags;
+    const values = argValues.values;
+    const useColors = !flags.noColors && colorsSupported();
+    const showUsage = function () {
+        console.log(
+            prettyFormatCommandUsage(getCommandLine(), argsConfig, useColors),
+        );
+    };
+    if (flags.help) {
+        showUsage();
+        process.exit(0);
+    }
+    if (flags.version) {
+        console.log(
+            "from-submodules-to-monorepo version: " + globalThis.__VERSION__,
+        );
+        process.exit(0);
+    }
+    const acknowledged = flags.acknowledged;
+    const resetWithMasterOrMainBranches = flags.resetWithMasterOrMainBranches;
+    const deleteExistingBranches = flags.deleteExistingBranches;
+    const noReports = flags.noReports;
+    const dontKeepUntrackedFiles = flags.dontKeepUntrackedFiles;
+    const createTreeFiles = flags.createTreeFiles;
+    const noThreads = flags.noThreads;
+    const pullRemotes = flags.pullRemotes;
+    const nukeRemote = flags.nukeRemote;
+    const mainRepoDir = values.repoDir;
 
-if (!acknowledged) {
-    console.log("You must acknowledge the risks:");
-    console.log("Use it at your own risk.");
-    console.log(
-        "This script is highly experimental and may cause irreversible damage, including but not limited to data loss, corruption of repositories, or deletion of your entire project. I will not be held responsible or liable for any damages, errors, or losses caused by using this solution. Always ensure you have proper backups before proceeding.",
-    );
-    console.log("Use --acknowledge-risks-and-continue and try again");
-    process.exit(1);
-}
+    if (mainRepoDir == null) {
+        console.error("Missing repo dir");
+        showUsage();
+        process.exit(1);
+    }
 
-if (typeof mainRepoDir != "string")
-    throw new Error("A repo directory is required");
-if (typeof migrationBranchName != "string")
-    throw new Error("Migration branch name is required");
+    let migrationBranchName = values.branchName;
 
-performTransformation(mainRepoDir, {
-    migrationBranchName,
-    resetWithMasterOrMainBranches,
-    deleteExistingBranches,
-    noThreads,
-    pullRemotes,
-    nukeRemote,
-    createReport,
-    createTreeFiles,
-    keepUntrackedFiles,
-});
+    if (migrationBranchName == null || migrationBranchName == "") {
+        migrationBranchName = defaultMigrationBranchName;
+    }
+
+    if (!existsSync(mainRepoDir)) {
+        throw new Error(`The directory does not exist: ${mainRepoDir}`);
+    }
+
+    if (pullRemotes) {
+        if (!nukeRemote && !noThreads) {
+            console.error(
+                "--pull-remotes requires --no-threads or --nuke-remote",
+            );
+            showUsage();
+            process.exit(1);
+        }
+    }
+
+    if (!acknowledged) {
+        console.log("You must acknowledge the risks:");
+        console.log("Use it at your own risk.");
+        console.log(
+            "This script is highly experimental and may cause irreversible damage, including but not limited to data loss, corruption of repositories, or deletion of your entire project. I will not be held responsible or liable for any damages, errors, or losses caused by using this solution. Always ensure you have proper backups before proceeding.",
+        );
+        console.log("Use --acknowledge-risks-and-continue and try again");
+        process.exit(1);
+    }
+
+    if (typeof mainRepoDir != "string")
+        throw new Error("A repo directory is required");
+    if (typeof migrationBranchName != "string")
+        throw new Error("Migration branch name is required");
+
+    await performTransformation(mainRepoDir, {
+        migrationBranchName,
+        resetWithMasterOrMainBranches,
+        deleteExistingBranches,
+        noThreads,
+        pullRemotes,
+        nukeRemote,
+        createReport: !noReports,
+        createTreeFiles,
+        keepUntrackedFiles: !dontKeepUntrackedFiles,
+    });
+})();

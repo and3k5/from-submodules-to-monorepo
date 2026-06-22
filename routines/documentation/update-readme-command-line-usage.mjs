@@ -3,10 +3,11 @@ import { readFileSync, writeFileSync } from "fs";
 import {
     ansiCodesCssColors,
     reverseAnsiCode,
-} from "../../utils/output/colors.mjs";
+} from "../../src/utils/output/colors.mjs";
 
-const output = execFileSync("npx", [".", "--help", "--enable-colors"], {
+const output = execFileSync("npx", [".", "--help"], {
     encoding: "utf-8",
+    env: { ...process.env, FORCE_COLOR: "1" },
 });
 
 const readmeContent = readFileSync("USAGE.md", { encoding: "utf-8" }).split(

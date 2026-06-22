@@ -96,7 +96,7 @@ export async function performTransformation(
             console.log("Total time elapsed: " + readableTime);
         });
 
-        if (createReport) {
+        if (createReport !== false) {
             dirForReport = resolve(
                 mainRepoDir,
                 "..",
@@ -146,7 +146,7 @@ export async function performTransformation(
         console.log(`   Directory: ${process.cwd()}`);
         console.log(`   Repo dir: ${relative(process.cwd(), mainRepoDir)}`);
         let keepUntrackedFilesPath: string | undefined = undefined;
-        if (keepUntrackedFiles) {
+        if (keepUntrackedFiles !== false) {
             keepUntrackedFilesPath = createTempDir();
             console.log(
                 `   Keeping untracked files. Stores archives in ${keepUntrackedFilesPath}`,

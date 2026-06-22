@@ -128,4 +128,4 @@ git submodule add /home/dev/remotes/project-d project-d
 git add project-d
 git commit -m "Add project-d as submodule"
 
-/workspace/fstm --enable-colors --acknowledge-risks-and-continue --no-threads --keep-untracked-files /home/dev/project-a
+/workspace/fstm --acknowledge-risks-and-continue --no-threads /home/dev/project-a

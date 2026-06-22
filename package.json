@@ -9,6 +9,7 @@
     "directories": {},
     "scripts": {
         "test": "npm run build:dev -- --devtool source-map && node dist/test --enable-colors",
+        "test:unit": "vitest run",
         "test:docker": "npm run internal:build:prod:compile && cp ./fstm test/fstm && docker compose -f test/docker-compose.yml run test-runner",
         "format": "prettier . --write",
         "lint": "run-s lint:*",
@@ -47,6 +48,7 @@
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3",
         "typescript-eslint": "^8.29.1",
+        "vitest": "^4.1.9",
         "webpack": "^5.99.5",
         "webpack-cli": "^6.0.1"
     },

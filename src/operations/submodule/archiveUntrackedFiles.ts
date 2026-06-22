@@ -18,6 +18,7 @@ export async function archiveUntrackedFiles(
         run("git", ["ls-files", "--others"], {
             encoding: "utf-8",
             cwd: fullPath,
+            maxBuffer: 100 * 1024 * 1024,
         }).stdout as string
     )
         .split("\n")

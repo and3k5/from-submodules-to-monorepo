@@ -49,7 +49,9 @@ export function flattenTreeToList(
         for (const child of fileTree.children) {
             const res = flattenTreeToList(child, join(path, fileTree.name));
             if (!res) continue;
-            result.push(...res);
+            for (const r of res) {
+                result.push(r);
+            }
         }
         return result;
     }

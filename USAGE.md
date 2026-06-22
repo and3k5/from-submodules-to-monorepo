@@ -24,8 +24,8 @@ This script is highly experimental and may cause irreversible damage, including 
         <code style="color: rgb(204, 204, 0);">--help</code>
             <code style="color: rgb(0, 204, 0);">Show this help message.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
-        <code style="color: rgb(204, 204, 0);">--enable-colors</code>
-            <code style="color: rgb(0, 204, 0);">Enable colors in the output.</code>
+        <code style="color: rgb(204, 204, 0);">--no-colors</code>
+            <code style="color: rgb(0, 204, 0);">Disable colors in the output.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
         <code style="color: rgb(204, 204, 0);">--version</code>
             <code style="color: rgb(0, 204, 0);">Show the version of this package.</code>
@@ -49,16 +49,17 @@ This script is highly experimental and may cause irreversible damage, including 
         <code style="color: rgb(204, 204, 0);">--delete-existing-branches</code>
             <code style="color: rgb(0, 204, 0);">If any branch exist (&lt;branch-name&gt;) then delete them.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
-        <code style="color: rgb(204, 204, 0);">--create-report</code>
-            <code style="color: rgb(0, 204, 0);">Create a report with the transformation output and tree files to compare before and after.</code>
+        <code style="color: rgb(204, 204, 0);">--no-reports</code>
+            <code style="color: rgb(0, 204, 0);">Don&#039;t create a report.
+            By default, a report with the transformation output and tree files to compare before and after is created.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
         <code style="color: rgb(204, 204, 0);">--create-tree-files</code>
             <code style="color: rgb(0, 204, 0);">Create tree files to compare before and after.
-            Overwritten when using --create-report.</code>
+            Overwritten when using --no-reports.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
-        <code style="color: rgb(204, 204, 0);">--keep-untracked-files</code>
-            <code style="color: rgb(0, 204, 0);">Keep all untracked files after transformation.
-            Archives will be stored in a temporary directory and then restored after the transformation.</code>
+        <code style="color: rgb(204, 204, 0);">--dont-keep-untracked-files</code>
+            <code style="color: rgb(0, 204, 0);">Don&#039;t keep untracked files after transformation.
+            By default, untracked files are archived and restored after the transformation.</code>
             <code style="color: rgb(0, 0, 204);">Optional.</code><code style="color: rgb(0, 204, 0);"></code>
 
 </pre>
@@ -70,7 +71,7 @@ You will be asked to add `--acknowledge-risks-and-continue` to acknowledge that 
 ## Example usage
 
 ```bash
-npx from-submodules-to-monorepo --keep-untracked-files --reset-with-master-or-main-branches --delete-existing-branches /home/user/dev/my-very-huge-project transform-repository
+npx from-submodules-to-monorepo --reset-with-master-or-main-branches --delete-existing-branches /home/user/dev/my-very-huge-project transform-repository
 ```
 
 _Note: I left out the `--acknowledge-risks-and-continue` to prevent a copy paste ending up ruining someones life_

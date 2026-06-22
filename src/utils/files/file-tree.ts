@@ -14,7 +14,12 @@ interface DirectoryItem {
     children: Array<FileTreeItem>;
 }
 
-export type FileTreeItem = FileItem | DirectoryItem;
+interface SymlinkItem {
+    name: string;
+    type: "symlink";
+}
+
+export type FileTreeItem = FileItem | DirectoryItem | SymlinkItem;
 
 interface GetFileTreeOptions {
     excludedFiles?: string[];
@@ -23,13 +28,13 @@ interface GetFileTreeOptions {
 export async function getFileTreeItems(
     dirPath: string,
     options?: GetFileTreeOptions | undefined,
-): Promise<DirectoryItem | FileItem | undefined> {
+): Promise<FileTreeItem | undefined> {
     dirPath = resolve(dirPath);
 
     const hiddenDetector = await createHiddenDetector(dirPath);
 
     function buildTree(currentPath: string): FileTreeItem | undefined {
-        const stats = fs.statSync(currentPath);
+        const stats = fs.lstatSync(currentPath);
 
         if (hiddenDetector(currentPath)) {
             return undefined;
@@ -55,10 +60,26 @@ export async function getFileTreeItems(
                 type: "dir",
                 children: children,
             };
+        } else if (stats.isSymbolicLink()) {
+            return {
+                name: basename(currentPath),
+                type: "symlink",
+            };
+        } else {
+            throw new Error(
+                `Unsupported file type for ${currentPath} in file tree generation! File: ${stats.isFile()}, Directory: ${stats.isDirectory()}, SymbolicLink: ${stats.isSymbolicLink()}, Size: ${stats.size}`,
+            );
         }
     }
 
-    return buildTree(resolve(dirPath));
+    const resolvedDirPath = resolve(dirPath);
+    try {
+        return buildTree(resolvedDirPath);
+    } catch (e) {
+        throw new Error(
+            `Error creating tree for ${resolvedDirPath}: ${(e as Error).message}`,
+        );
+    }
 }
 
 export async function renderFileTree(treeItem: FileTreeItem): Promise<string> {
