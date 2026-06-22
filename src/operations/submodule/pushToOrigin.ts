@@ -6,6 +6,7 @@ import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { run } from "../../utils/process/run";
 import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
+import { registerRemote } from "../../utils/git/remote-registry";
 
 export function pushToOrigin(
     mainRepoDir: string,
@@ -39,6 +40,7 @@ export function pushToOrigin(
     run("git", ["remote", "add", remoteName, remoteUrl], {
         cwd: fullPath,
     });
+    registerRemote(fullPath, remoteName);
 
     try {
         execFileSync("git", ["push", remoteName, `:${migrationBranchName}`], {

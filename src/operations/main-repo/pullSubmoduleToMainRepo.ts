@@ -7,6 +7,7 @@ import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { run } from "../../utils/process/run";
 import { getRemotePath } from "../../utils/storage/get-temp-remote-path";
+import { registerRemote } from "../../utils/git/remote-registry";
 
 export async function pullSubmoduleToMainRepo(
     mainRepoDir: string,
@@ -38,6 +39,7 @@ export async function pullSubmoduleToMainRepo(
     run("git", ["remote", "add", remoteName, remoteUrl], {
         cwd: mainRepoDir,
     });
+    registerRemote(mainRepoDir, remoteName);
 
     console.log(`         Pull branch from remote into main repo`);
 

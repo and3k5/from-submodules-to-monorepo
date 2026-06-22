@@ -1,9 +1,24 @@
+import { execFileSync } from "child_process";
 import { createSubModules } from "./create-submodules";
 import { performTransformation } from "../../index";
 import { readFileSync } from "fs";
 import { pullFlag } from "../../utils/args/pull-flag";
 import { diff } from "./diff-tree";
 import { FileTreeItem } from "../../utils/files/file-tree";
+
+function listRemotes(repoDir: string): string[] {
+    try {
+        return execFileSync("git", ["remote"], {
+            cwd: repoDir,
+            encoding: "utf-8",
+        })
+            .trim()
+            .split("\n")
+            .filter(Boolean);
+    } catch {
+        return [];
+    }
+}
 
 export async function runSimulation() {
     try {
@@ -16,11 +31,25 @@ export async function runSimulation() {
         );
 
         if (!skipTransformation) {
-            const result = await performTransformation(mainRepoDir, {
-                migrationBranchName: "migrate-from-submodules-to-monorepo",
-                createReport: true,
-                keepUntrackedFiles: true,
-            });
+            const remotesBefore = new Set(listRemotes(mainRepoDir));
+            let result: Awaited<ReturnType<typeof performTransformation>>;
+            try {
+                result = await performTransformation(mainRepoDir, {
+                    migrationBranchName: "migrate-from-submodules-to-monorepo",
+                    createReport: true,
+                    keepUntrackedFiles: true,
+                });
+            } finally {
+                const leakedRemotes = listRemotes(mainRepoDir).filter(
+                    (r) => !remotesBefore.has(r),
+                );
+                if (leakedRemotes.length > 0) {
+                    console.error(
+                        `🔴 Remotes not cleaned up after transformation: ${leakedRemotes.join(", ")}`,
+                    );
+                    process.exit(1);
+                }
+            }
 
             //await createTreeFile(mainRepoDir, "tree-after.json", resolve(mainRepoDir, ".."));
 
