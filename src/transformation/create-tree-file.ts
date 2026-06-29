@@ -21,7 +21,8 @@ export async function createTreeFile(
     writeFileSync(join(location, filename), content, { encoding: "utf8" });
 
     if (fileTree) {
-        const content2 = flattenTreeToList(fileTree, dirname(dir))?.join("\n") ?? "";
+        const content2 =
+            flattenTreeToList(fileTree, dirname(dir))?.join("\n") ?? "";
 
         writeFileSync(join(location, filename) + "_filelist.txt", content2, {
             encoding: "utf8",
