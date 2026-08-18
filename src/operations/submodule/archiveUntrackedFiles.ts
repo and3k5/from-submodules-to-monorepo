@@ -1,5 +1,5 @@
 import { existsSync } from "fs";
-import { basename, relative, resolve } from "path/posix";
+import { basename, relative, resolve } from "path";
 import { create } from "tar";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
@@ -23,7 +23,14 @@ export async function archiveUntrackedFiles(
     )
         .split("\n")
         .filter((x) => x != "")
-        .map((x) => relative(mainRepoDir, resolve(fullPath, x.trim())));
+        // node-tar (and the extraction step in performUnpackAllArchives) expect
+        // forward-slash entry paths rooted at mainRepoDir, so normalise separators.
+        .map((x) =>
+            relative(mainRepoDir, resolve(fullPath, x.trim())).replaceAll(
+                "\\",
+                "/",
+            ),
+        );
 
     if (files.length == 0) {
         console.log("      No untracked files to archive");

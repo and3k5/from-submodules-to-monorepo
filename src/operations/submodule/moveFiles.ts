@@ -1,11 +1,8 @@
 import { execFileSync } from "child_process";
-import { existsSync, mkdirSync, renameSync } from "fs";
-import { platform } from "os";
-import { basename, join, relative } from "path/posix";
+import { basename } from "path";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";
-import { sameDirName } from "../../utils/path/same-dir-name";
 import { run } from "../../utils/process/run";
 
 export function moveFiles(
@@ -16,84 +13,39 @@ export function moveFiles(
 ) {
     fullPath = ensureSameCaseForPath(fullPath);
     const correctCasedSubmodulePath = basename(fullPath);
-    const targetPath = join(fullPath, correctCasedSubmodulePath);
+
     console.log(
-        `      Moving ${relative(mainRepoDir, fullPath)} to ${relative(mainRepoDir, targetPath)}`,
+        `      Moving contents into ${correctCasedSubmodulePath}/ (index rewrite)`,
     );
-    const tempKeyword = "_TEMP_DUP";
-    const targetPathExists = existsSync(targetPath);
-    const tempNameForExistingPath = `${basename(ensureSameCaseForPath(targetPath))}${tempKeyword}`;
-    if (targetPathExists) {
-        console.log(
-            `         Target path already exists, moving it to ${tempNameForExistingPath}`,
-        );
-        run(
-            "git",
-            [
-                "mv",
-                relative(fullPath, ensureSameCaseForPath(targetPath)),
-                relative(fullPath, join(fullPath, tempNameForExistingPath)),
-            ],
-            {
-                cwd: fullPath,
-            },
-        );
-    }
 
-    mkdirSync(targetPath, { recursive: true });
-
-    const entries = (
-        run("git", ["ls-tree", "--name-only", "HEAD"], {
-            encoding: "utf-8",
-            cwd: fullPath,
-        }).stdout as string
-    )
-        .split("\n")
-        .map((x) => x.trim())
-        .filter((e) => e != "");
-
-    for (const entry of entries) {
-        if (sameDirName(entry, correctCasedSubmodulePath)) continue;
-        const entryPath = `${fullPath}/${entry}`;
-        if (
-            platform() == "win32" &&
-            !existsSync(entryPath) &&
-            entries.some(
-                (x) => x !== entry && x.toUpperCase() == entry.toUpperCase(),
-            )
-        ) {
-            continue;
-        }
-        console.log(
-            "            mv " +
-                relative(mainRepoDir, entryPath) +
-                " " +
-                relative(mainRepoDir, targetPath),
-        );
-        run("git", ["mv", entryPath, targetPath], {
-            cwd: fullPath,
-        });
-    }
-
-    if (targetPathExists) {
-        renameSync(
-            join(fullPath, tempNameForExistingPath),
-            join(
-                targetPath,
-                tempNameForExistingPath.substring(
-                    0,
-                    tempNameForExistingPath.length - tempKeyword.length,
-                ),
-            ),
-        );
-    }
-
-    console.log("         Stage files to commit");
-
-    execFileSync("git", ["add", "."], { cwd: fullPath, stdio: "ignore" });
+    // Relocate every tracked entry under a subdirectory named after the submodule by
+    // rewriting the index from HEAD's tree, instead of moving files in the working tree.
+    //
+    // This is done with plumbing (read-tree) rather than `git mv` because `git mv` operates
+    // on the working tree and fails on several perfectly valid tree shapes — notably
+    // symlinks that point at a directory (git follows them and errors "is in index and no
+    // submodule"), and tracked files that are absent from the working tree (skip-worktree /
+    // assume-unchanged → "bad source"). read-tree works purely on tree objects, so it
+    // preserves every mode (regular, executable 100755, symlink 120000, gitlink 160000) and
+    // is oblivious to the state of the working tree. It also subsumes the old "target dir
+    // already exists" (_TEMP_DUP) handling: an existing top-level `<name>` entry simply
+    // becomes `<name>/<name>` in the freshly-built tree, with no collision.
+    run("git", ["read-tree", "--empty"], { cwd: fullPath });
+    run(
+        "git",
+        ["read-tree", `--prefix=${correctCasedSubmodulePath}/`, "HEAD"],
+        { cwd: fullPath },
+    );
 
     console.log("         Commit");
 
+    // Commits the rewritten index (parent = current HEAD, i.e. the migration branch tip).
+    // The working tree is intentionally left untouched/stale — only the committed tree is
+    // pushed and merged into the main repo, so the submodule working tree no longer matters.
+    //
+    // Uses execFileSync with stdio "ignore" rather than run(): a whole-tree relocation makes
+    // `git commit` print a per-file summary of every moved path, which overflows the captured
+    // output buffer (spawnSync ENOBUFS) on large submodules. We don't need the output.
     execFileSync("git", ["commit", "-m", "Moving submodule files"], {
         cwd: fullPath,
         stdio: "ignore",

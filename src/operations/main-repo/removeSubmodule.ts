@@ -1,5 +1,5 @@
 import { execFileSync } from "child_process";
-import { basename, join } from "path/posix";
+import { basename, join } from "path";
 import { Submodule } from "../../utils/git/read-gitmodules";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { ensureSameCaseForPath } from "../../utils/path/ensure-same-case-for-path";

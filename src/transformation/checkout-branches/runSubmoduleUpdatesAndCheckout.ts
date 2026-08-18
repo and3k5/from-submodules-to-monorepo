@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
 import { existsSync } from "fs";
-import { join, resolve } from "path/posix";
+import { join, resolve } from "path";
 import { cpuThreadCount } from ".";
 import { checkoutBranches } from "./checkoutBranches";
 import { readGitmodules } from "../../utils/git/read-gitmodules";
