@@ -1,11 +1,27 @@
 import { platform } from "os";
-import { getRunOutput } from "../process/get-run-output";
+import { getRunOutputBuffer } from "../process/get-run-output";
 import { normalize, basename } from "path";
 import { createConfig } from "../args/command-config";
 import { getCommandValues } from "../args/command-config";
 
 export function alignPathLayout(p) {
     return normalize(p).replaceAll("\\", "/").toUpperCase();
+}
+
+/**
+ * Runs Windows `attrib` and decodes its output correctly.
+ *
+ * When `attrib`'s stdout is redirected to a pipe (as here) it writes paths in the Windows ANSI
+ * code page — cp1252 on Western/Danish systems — NOT UTF-8 and NOT the OEM console page (`chcp`
+ * has no effect on it). Decoding those bytes as UTF-8 turns non-ASCII filenames (ø/æ/å) into
+ * replacement characters, so the lookup keys never match the real Unicode names the filesystem
+ * reports. We therefore capture the raw bytes and decode them as windows-1252.
+ * @param basePath
+ * @param args
+ */
+async function runAttrib(basePath: string, args: string[]): Promise<string> {
+    const buffer = await getRunOutputBuffer("attrib", args, { cwd: basePath });
+    return new TextDecoder("windows-1252").decode(buffer);
 }
 
 interface HiddenDetector {
@@ -19,19 +35,11 @@ export async function createHiddenDetector(
     if (platform() == "win32") {
         const map = new Map();
 
-        const content = (
-            await getRunOutput("attrib", ["/S", "/D"], {
-                cwd: basePath,
-            })
-        )
+        const content = (await runAttrib(basePath, ["/S", "/D"]))
             .split("\n")
             .filter((x) => x.trim() !== "");
         content.push(
-            ...(
-                await getRunOutput("attrib", ["/S", "/D", "."], {
-                    cwd: basePath,
-                })
-            )
+            ...(await runAttrib(basePath, ["/S", "/D", "."]))
                 .split("\n")
                 .filter((x) => x.trim() !== ""),
         );
@@ -50,14 +58,19 @@ export async function createHiddenDetector(
 
         const method = (path) => {
             const mapOut = map.get(alignPathLayout(path));
-            if (!mapOut)
-                throw new Error(
-                    "Attrib did not return values for " +
+            if (!mapOut) {
+                // attrib didn't report this path. Treat it as not-hidden and warn, rather than
+                // aborting the whole migration — hidden detection only feeds the optional
+                // report/tree snapshot, so a stray miss must not be fatal.
+                console.error(
+                    "Warning: attrib returned no attributes for " +
                         alignPathLayout(path) +
                         " basePath(" +
                         basePath +
-                        ")",
+                        "); treating as not hidden",
                 );
+                return false;
+            }
             return mapOut.includes("H");
         };
         method.getMap = () => map;

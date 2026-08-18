@@ -1,6 +1,7 @@
 import { getMatchingBranch } from "../../utils/git/get-matching-branch";
 import { ConsoleBase } from "../../utils/output/console-wrapper";
 import { whileIndexLock } from "../../utils/git/while-index-lock";
+import { ensureLongPathsEnabled } from "../../utils/git/ensure-long-paths";
 import { execFileSync } from "child_process";
 
 export async function checkoutBranch(
@@ -19,6 +20,9 @@ export async function checkoutBranch(
             "Has no matching branch names for any of the branches: " +
                 branchNames.join(", "),
         );
+
+    // Enable long-path support before the working-tree resets/checkouts below (Windows MAX_PATH).
+    ensureLongPathsEnabled(path);
 
     await whileIndexLock(path);
     console.log("Restore: " + path);

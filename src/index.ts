@@ -9,6 +9,7 @@ import { pullSubmoduleToMainRepo } from "./operations/main-repo/pullSubmoduleToM
 import { applyTransformationForSubmodule } from "./operations/submodule/worker/applyTransformationForSubmodule";
 import { whileIndexLock } from "./utils/git/while-index-lock";
 import { ensureSameCaseForPath } from "./utils/path/ensure-same-case-for-path";
+import { ensureLongPathsEnabled } from "./utils/git/ensure-long-paths";
 import { checkoutBranches } from "./transformation/checkout-branches/checkoutBranches";
 import { createTreeFile } from "./transformation/create-tree-file";
 import { mkdir } from "fs/promises";
@@ -85,6 +86,10 @@ export async function performTransformation(
     let maintenanceAutoDisabled = false;
 
     try {
+        // Enable git long-path support in the main repo up front (Windows only, best-effort) so
+        // branch checkout, the submodule merges and archive unpacking never hit MAX_PATH.
+        ensureLongPathsEnabled(mainRepoDir);
+
         let dirForTreeFiles: string | null = null;
 
         let dirForReport: string | null = null;

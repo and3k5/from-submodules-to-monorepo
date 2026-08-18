@@ -13,6 +13,8 @@ export function concurrencyFromCpuUsage(cpuUsage: number): number {
  * cpuUsage = 0.5 → sleep as long as the task took (50% duty cycle)
  * cpuUsage = 0.8 → sleep for 25% of task time (80% duty cycle)
  * cpuUsage = 1.0 → no sleep
+ * @param maxConcurrency
+ * @param cpuUsage
  */
 export function createConcurrentQueue(
     maxConcurrency: number,

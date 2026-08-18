@@ -6,7 +6,7 @@ import {
     readFileSync,
     rmSync,
 } from "fs";
-import { join, sep } from "path";
+import { join } from "path";
 import { tmpdir } from "os";
 import { createTreeFile, flattenTreeToList } from "./create-tree-file";
 import type { FileTreeItem } from "../utils/files/file-tree";
@@ -21,14 +21,14 @@ describe("flattenTreeToList", () => {
             size: 42,
         };
         expect(flattenTreeToList(item, "/base")).toEqual([
-            `/base${sep}readme.txt:42`,
+            `${join("/base", "readme.txt")}:42`,
         ]);
     });
 
     it("returns empty-dir entry for a directory with no children", () => {
         const item: FileTreeItem = { name: "empty", type: "dir", children: [] };
         expect(flattenTreeToList(item, "/base")).toEqual([
-            `/base${sep}empty:empty-dir`,
+            `${join("/base", "empty")}:empty-dir`,
         ]);
     });
 
@@ -51,8 +51,8 @@ describe("flattenTreeToList", () => {
             ],
         };
         expect(flattenTreeToList(item, "/base")).toEqual([
-            `/base${sep}src${sep}a.ts:10`,
-            `/base${sep}src${sep}b.ts:20`,
+            `${join("/base", "src", "a.ts")}:10`,
+            `${join("/base", "src", "b.ts")}:20`,
         ]);
     });
 
@@ -69,7 +69,7 @@ describe("flattenTreeToList", () => {
             ],
         };
         expect(flattenTreeToList(item, "/base")).toEqual([
-            `/base${sep}root${sep}sub${sep}deep.ts:5`,
+            `${join("/base", "root", "sub", "deep.ts")}:5`,
         ]);
     });
 
@@ -106,7 +106,7 @@ describe("flattenTreeToList", () => {
             ],
         };
         expect(flattenTreeToList(item, "/base")).toEqual([
-            `/base${sep}mixed${sep}good.ts:7`,
+            `${join("/base", "mixed", "good.ts")}:7`,
         ]);
     });
 });
