@@ -18,6 +18,7 @@
         "postversion": "npm run routines:versioning:read-version -- --run-command",
         "prepack": "npm run build:prod",
         "start": "node dist/perform-transformation.js",
+        "cleanup": "node dist/cleanup.js",
         "build:dev": "npx webpack --mode development",
         "build:prod": "npx webpack --mode production",
         "internal:build:prod:compile": "bun build ./src/index.ts --compile --outfile fstm",

@@ -20,6 +20,10 @@ const config: webpack.Configuration = {
             import: "./src/status.ts",
             filename: "status.js",
         },
+        cleanup: {
+            import: "./src/cleanup.ts",
+            filename: "cleanup.js",
+        },
     },
     module: {
         rules: [
